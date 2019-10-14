@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Platform, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, BackHandler, ToastAndroid } from 'react-native'
-
+import MSSQL from 'react-native-mssql';
 import AsyncStorage from '@react-native-community/async-storage'
 import products from '../assets/products';
 
@@ -13,7 +13,14 @@ export default function Main({ navigation }) {
 
     }
   })
-
+  let config = {
+    server: '192.168.1.1', //ip address of the mssql database
+    username: 'sa', //username to login to the database
+    password: 'password', //password to login to the database
+    database: 'admin', //the name of the database to connect to
+    port: 1234 //OPTIONAL, port of the database on the server
+}
+// MSSQL.connect(config);
 
   return (
 
