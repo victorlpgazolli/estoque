@@ -1,46 +1,95 @@
 
 import React, { Component } from 'react';
-import { KeyboardAvoidingView, ScrollView, Platform, TextInput, StyleSheet, Image, View, Text, TouchableOpacity, ToastAndroid } from 'react-native'
+import { SafeAreaView, KeyboardAvoidingView, ScrollView, Platform, TextInput, StyleSheet, Image, View, Text, TouchableOpacity, ToastAndroid } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 
-var host = '';
+
+var config = {
+    host: '192.168.1.1', //ip address of the mssql database
+    user: 'sa', //username to login to the database
+    pass: 'password', //password to login to the database
+    db: 'admin', //the name of the database to connect to
+    port: 1433 //OPTIONAL, port of the database on the server
+}
 
 export default function Main({ navigation }) {
 
     async function handleConfig() {
-        if(host.length > 0){
+        if (config.host.length > 0 && config.port.length > 0 && config.user.length > 0 && config.pass.length > 0 && config.db.length > 0) {
             try {
-                await AsyncStorage.setItem('host', host);
-                navigation.navigate("Principal", host)
+                navigation.navigate("Principal", config)
                 ToastAndroid.show("Salvo!", ToastAndroid.SHORT);
             } catch (error) {
                 ToastAndroid.show("Problema ao criar conta", ToastAndroid.SHORT);
                 console.log(error)
             }
-            
-        }else{
+
+        } else {
             ToastAndroid.show("Digite o host", ToastAndroid.SHORT);
         }
-        
+
     }
     return (
-        <View style={styles.body}>
-            <View style={styles.form}>
-                <Text style={styles.label}>Digite o host</Text>
-                <TextInput
-                    onChangeText={val => host = val}
-                    placeholder="Seu nome"
-                    autoCapitalize="none"
-                    autoCorrect={false}
-                    style={styles.input}
-                    maxLength={15}
-                />
-
-            </View>
-            <TouchableOpacity onPress={handleConfig} style={styles.submitBtn}>
-                <Text style={styles.submitBtnText}>Salvar</Text>
-            </TouchableOpacity>
-        </View>
+        <ScrollView style={{ flex: 1 }}>
+            <KeyboardAvoidingView
+                behavior={Platform.OS === "ios" ? "padding" : null}
+            >
+                {/* <SafeAreaView> */}
+                    <View style={styles.body}>
+                        <View style={styles.form}>
+                            <Text style={styles.label}>Digite o host</Text>
+                            <TextInput
+                                onChangeText={val => config.host = val}
+                                placeholder="HOST"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                style={styles.input}
+                                maxLength={40}
+                            />
+                            <Text style={styles.label}>Digite a Porta</Text>
+                            <TextInput
+                                onChangeText={val => config.port = val}
+                                placeholder="PORTA"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                style={styles.input}
+                                maxLength={40}
+                            />
+                            <Text style={styles.label}>Digite o Username</Text>
+                            <TextInput
+                                onChangeText={val => config.user = val}
+                                placeholder="USERNAME"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                style={styles.input}
+                                maxLength={40}
+                            />
+                            <Text style={styles.label}>Digite a senha</Text>
+                            <TextInput
+                                onChangeText={val => config.pass = val}
+                                placeholder="PASSWORD"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                style={styles.input}
+                                maxLength={40}
+                            />
+                            <Text style={styles.label}>Digite o nome do banco de dados</Text>
+                            <TextInput
+                                onChangeText={val => config.db = val}
+                                placeholder="DATABASE"
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                style={styles.input}
+                                maxLength={40}
+                            />
+                        </View>
+                        <TouchableOpacity onPress={handleConfig} style={styles.submitBtn}>
+                            <Text style={styles.submitBtnText}>Salvar</Text>
+                        </TouchableOpacity>
+                    </View>
+                {/* </SafeAreaView> */}
+            </KeyboardAvoidingView>
+        </ScrollView>
     );
 }
 const styles = StyleSheet.create({
@@ -68,7 +117,7 @@ const styles = StyleSheet.create({
         margin: 10,
         alignSelf: 'center',
         bottom: 0,
-        position: 'absolute'
+        // position: 'absolute'
     },
     submitBtnText: {
         fontSize: 20,

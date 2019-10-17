@@ -1,32 +1,22 @@
 
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Platform, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, BackHandler, ToastAndroid } from 'react-native'
-import MSSQL from 'react-native-mssql';
 import AsyncStorage from '@react-native-community/async-storage'
 import products from '../assets/products';
 
 export default function Main({ navigation }) {
-  AsyncStorage.getItem('host').then(host => {
-    if (host.length > 0) {
-      console.log(host)
-    } else {
+  const [connection, setConnection] = useState([]);
+  useEffect(() => {
+    
+  }, []);
 
-    }
-  })
-  let config = {
-    server: '192.168.1.1', //ip address of the mssql database
-    username: 'sa', //username to login to the database
-    password: 'password', //password to login to the database
-    database: 'admin', //the name of the database to connect to
-    port: 1234 //OPTIONAL, port of the database on the server
-}
-// MSSQL.connect(config);
+  // AsyncStorage.getItem('host').then(host => {
+
+  // })
 
   return (
 
     <View style={styles.container}>
-      {/* {this.props.navigation.getParam(searchState, true) && */}
-
       <ScrollView>
         {products.map(product => {
           return (
@@ -55,7 +45,6 @@ export default function Main({ navigation }) {
     </View>
   );
 };
-// };
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -114,6 +103,10 @@ const styles = StyleSheet.create({
     borderColor: '#CCC',
     borderWidth: 1,
     backgroundColor: '#fff'
+  },
+  connect: {
+    left: 0,
+    backgroundColor: '#00c903',
   },
   floatingBtn: {
     borderRadius: 30,
