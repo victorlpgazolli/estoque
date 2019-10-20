@@ -25,14 +25,14 @@ export default function Login ({ navigation }) {
   async function handleLogin () {
         //await AsyncStorage.setItem('username', username);
         //const response = await api.post('/users', { username: user })
-        AsyncStorage.getItem('@account_email').then(user => {
-            if (user == email) {
-                navigation.navigate('Principal')
-            }else{
-                ToastAndroid.show("Email não cadastrado", ToastAndroid.SHORT);
+        navigation.navigate('tabNav')
+        // AsyncStorage.getItem('@account_email').then(user => {
+        //     if (user == email) {
+        //     }else{
+        //         ToastAndroid.show("Email não cadastrado", ToastAndroid.SHORT);
                 
-            }
-          })
+        //     }
+        //   })
     }
     function handleRegister(){
         navigation.navigate('CadastrarLogin');
