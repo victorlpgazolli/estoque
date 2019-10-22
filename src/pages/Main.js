@@ -2,25 +2,37 @@
 import React, { useEffect, useState } from 'react';
 import { KeyboardAvoidingView, ScrollView, Platform, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, BackHandler, ToastAndroid } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
-import products from '../assets/products';
-
+import api from '../services/api'
 export default function Main({ navigation }) {
-  const [connection, setConnection] = useState([]);
-  useEffect(() => {
-    
+  const [products, setProduct] = useState([]);
+  useEffect(async () => {
+    try {
+      const { data } = await api.get('/product/list')
+      // setProduct(JSON.parse(data))
+      setProduct(data)
+      //const { docs } = response.data;
+
+      //console.log(docs);
+
+    } catch (err) {
+      // TODO
+      // adicionar tratamento da exceção
+      // console.error(err);
+    }
+    // const response = await api.get('/product/list')
+
+    // console.log(response)
   }, []);
 
   // AsyncStorage.getItem('host').then(host => {
-
   // })
-
   return (
 
     <View style={styles.container}>
       <ScrollView>
         {products.map(product => {
           return (
-            <TouchableOpacity onPress={() => navigation.navigate('Product', product)} key={product.id} style={styles.productItem}>
+            <TouchableOpacity onPress={() => navigation.navigate('Product', product)} key={product.cd_produto} style={styles.productItem}>
 
               {/* <Image
                   style={styles.images}
@@ -28,9 +40,9 @@ export default function Main({ navigation }) {
                   resizeMode='cover'
                 /> */}
               <View style={styles.productInfo}>
-                <Text style={[styles.productName, styles.productInfoItem]}>{product.name}</Text>
+                <Text style={[styles.productName, styles.productInfoItem]}>{product.nm_produto}</Text>
                 <View style={[styles.qntView]}>
-                  <Text style={[styles.productTag, styles.productInfoItem]}>{product.qnt}</Text>
+                  <Text style={[styles.productTag, styles.productInfoItem]}>{product.qt_produto_atual}</Text>
                   <Text style={[styles.productTagInfo, styles.productDetais]}>quantidade</Text>
                 </View>
 

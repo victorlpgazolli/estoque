@@ -1,6 +1,6 @@
 import axios from 'axios'
 
 const api = axios.create({
-    baseURL: 'http://localhost:3000'
+    baseURL: 'http://estoque_backend.serveo.net'
 })
 export default api;
