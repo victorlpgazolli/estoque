@@ -45,7 +45,6 @@ export default function Main({ navigation }) {
                   <Text style={[styles.productTag, styles.productInfoItem]}>{product.qt_produto_atual}</Text>
                   <Text style={[styles.productTagInfo, styles.productDetais]}>quantidade</Text>
                 </View>
-
               </View>
             </TouchableOpacity>
           )

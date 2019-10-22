@@ -4,11 +4,11 @@ import { KeyboardAvoidingView, Platform, StyleSheet, Image, View, Text, Touchabl
 
 export default function Product({ navigation }) {
 
-    const [evento, setEvento] = useState([]);
+    const [product, setProduct] = useState([]);
     useEffect(() => {
         try {
-            if (evento) {
-                setEvento(navigation.state.params)
+            if (product) {
+                setProduct(navigation.state.params)
             } else {
                 
             }
@@ -23,7 +23,7 @@ export default function Product({ navigation }) {
             enabled={Platform.OS === 'ios'}
             style={styles.container}>
             <View style={styles.infoView}>
-                <Text style={[styles.itemsText]}>{evento.name}</Text>
+                <Text style={[styles.itemsText]}>{product.nm_produto}</Text>
 
             </View>
 
