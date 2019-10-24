@@ -1,43 +1,97 @@
 
-import React from 'react';
+import React, { useEffect, useState, useCallback, Component } from 'react';
 import { View, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
+import RNPickerSelect from 'react-native-picker-select';
 var _product = {
   name: '',
-  qnt: '',
-  qnt_min: ''
+  valor_atual: '',
+  qnt_min: '',
+  qnt_atual: '',
+  category: ''
 }
 
-export default function Main({ navigation }) {
-  async function handleRegister() {
+// import SelectBox from '../assets/SelectBox'
+import api from '../services/api';
+var categories = []
+class SelectBox extends Component {
+  state = { categories: [], selectedCategory: '' }
+  updateUser = (_category) => {
+    console.log(_category)
+    _product.category = _category;
+    console.log(_product)
+    this.setState({ selectedCategory: _category })
+  }
+  UNSAFE_componentWillMount() {
+    // console.log(this.props.categories);
+    // var temp = Object.keys(this.props.categories).map(i => JSON.parse(this.props.categories[Number(i)])) 
+    // this.setState({ categories: this.props.categories })
+    // console.log(`${(this.props.categories)}`);
+    for (let i = 0; i < this.props.categories.length; i++) {
+      var key = this.props.categories[i][0].cd_categoria;
+      var label = this.props.categories[i][0].nm_categoria;
+      var color = '#000'
+      categories.push({ label: label, value: key, color: color })
+    }
+    console.log(categories)
+    // this.props.categories.foreach((item) => { 
+    //   this.setState({categories: categories.push(item)})
+    // })
+  }
+  render() {
+    return (
+      <View style={[styles.selectView]}>
+        <RNPickerSelect itemKey={this.state.selectedCategory}
+          style={pickerSelectStyles}
+          onValueChange={this.updateUser}
+          items={categories}>
+        </RNPickerSelect>
+      </View>
+    )
+  }
+}
+
+export default function RegisterProduct({ navigation }) {
+
+  async function handleSubmit() {
     if (validateInputs()) {
       try {
-// funçao de inserir
+        // funçao de inserir
+        const response = await api.post('/product/add', _product)
+        .then(item => {navigation.navigate("Principal")})
+        .catch(err => console.error(err))
+        console.log(response)
       } catch (error) {
         ToastAndroid.show("problema ao cadastrar produto", ToastAndroid.SHORT);
         console.log(error)
       }
-      
+
       navigation.navigate("Principal")
     }
     //const response = await api.post('/users', { username: user })
 
   }
   function validateInputs() {
+    console.log(_product)
     if (_product.name.length != 0) {
-      if (_product.qnt.length != 0) {
+      if (_product.qnt_atual.length != 0) {
         if (_product.qnt_min.length != 0) {
-          return true;
+          if (_product.valor_atual.length != 0) {
+            return true;
+          } else {
+            ToastAndroid.show('Digite o preço', ToastAndroid.SHORT);
+            return false;
+          }
         } else {
-          ToastAndroid.show('Digite a senha', ToastAndroid.SHORT);
+          ToastAndroid.show('Digite a quantidade mínima', ToastAndroid.SHORT);
           return false;
         }
       } else {
-        ToastAndroid.show('Digite o e-mail', ToastAndroid.SHORT);
+        ToastAndroid.show('Digite a quantidade atual', ToastAndroid.SHORT);
         return false;
       }
     } else {
-      ToastAndroid.show('Digite seu nome', ToastAndroid.SHORT);
+      ToastAndroid.show('Digite o nome', ToastAndroid.SHORT);
       return false;
     }
   }
@@ -53,9 +107,18 @@ export default function Main({ navigation }) {
           style={styles.input}
           maxLength={15}
         />
+        <Text style={styles.label}>Digite o preço do produto</Text>
+        <TextInput
+          onChangeText={val => _product.valor_atual = val}
+          placeholder="Preço do produto"
+          autoCapitalize="none"
+          autoCorrect={false}
+          style={styles.input}
+          maxLength={15}
+        />
         <Text style={styles.label}>Digite a quantidade atual</Text>
         <TextInput
-          onChangeText={val => _product.qnt = val}
+          onChangeText={val => _product.qnt_atual = val}
           placeholder="Quantidade ATUAL"
           autoCapitalize="none"
           autoCorrect={false}
@@ -71,12 +134,35 @@ export default function Main({ navigation }) {
           secureTextEntry={true}
         />
       </View>
-      <TouchableOpacity onPress={handleRegister} style={styles.submitBtn}>
-        <Text style={styles.submitBtnText}>Criar conta e Entrar</Text>
+      <SelectBox categories={navigation.state.params} />
+      <TouchableOpacity onPress={handleSubmit} style={styles.submitBtn}>
+        <Text style={styles.submitBtnText}>Cadastrar Produto</Text>
       </TouchableOpacity>
     </View>
   );
 };
+const pickerSelectStyles = StyleSheet.create({
+  inputIOS: {
+    fontSize: 16,
+    paddingVertical: 12,
+    paddingHorizontal: 10,
+    borderWidth: 1,
+    borderColor: 'gray',
+    borderRadius: 4,
+    color: 'black',
+    paddingRight: 30, // to ensure the text is never behind the icon
+  },
+  inputAndroid: {
+    fontSize: 16,
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderWidth: 0.5,
+    borderColor: 'purple',
+    borderRadius: 8,
+    color: 'black',
+    paddingRight: 30, // to ensure the text is never behind the icon
+  },
+});
 const styles = StyleSheet.create({
   body: {
     flex: 1,
