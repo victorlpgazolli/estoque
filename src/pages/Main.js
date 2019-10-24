@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, Component, useCallback } from 'react';
 import { KeyboardAvoidingView, ScrollView, Platform, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, BackHandler, ToastAndroid } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 import api from '../services/api'
@@ -8,19 +8,44 @@ import api from '../services/api'
 //   cd_produto: 1,
 //   qt_produto_atual: 10
 // }]
+var categories = [];
+var _text = 'Carregando...', _color = 'transparent', servidorIsOff = true;
+class ServidorState extends Component {
+  render() {
+    return (
+      <View style={{
+        width: this.props.barWidth, backgroundColor: this.props.colorToShow, justifyContent: 'center',
+        alignItems: "center", padding: 2
+      }}><Text>{this.props.textToShow}</Text></View>
+    )
+  }
+}
+
 export default function Main({ navigation }) {
   const [products, setProduct] = useState([]);
+  const [, updateState] = React.useState();
+  const forceUpdate = useCallback(() => updateState({}), []);
   useEffect(async () => {
     try {
-      const response = await api.get('/product/list')
-      var tempArray = response.data
+      const { data } = await api.get('/product/list')
       // console.info(response.data);
-      response.data.forEach(async (prod, index) => {
-        const { data } = await api.get('/category/' + prod.fk_categoria)
-        console.log(data[0].nm_categoria + tempArray[index].fk_categoria)
-        tempArray[index].fk_categoria =  data.nm_categoria
-      })
-      setProduct(response.data)
+      // tempArray.forEach(async (prod, index) => {
+      //   const { data } = await api.get('/category/' + prod.fk_categoria)
+      //   console.log(data[0].nm_categoria + tempArray[index].fk_categoria)
+      //   tempArray[index].fk_categoria = data.nm_categoria
+      // })
+      setProduct(data)
+
+      const { data: _categories } = await api.get('/category/list')
+
+      categories = Object.keys(_categories).map(function (key) {
+        return [_categories[key]];
+      });
+      
+      console.log(categories);
+      servidorIsOff = false;
+      forceUpdate();
+
 
       // console.log("EITA POURA: " +products)
 
@@ -33,7 +58,20 @@ export default function Main({ navigation }) {
     } catch (err) {
       // TODO
       // adicionar tratamento da exceção
-      console.log(err);
+      ToastAndroid.show(`${err}`, ToastAndroid.SHORT);
+      if (err.toString().includes("502")) {
+        // console.log(err)
+        _text = 'Problemas na conexão';
+        _color = '#FF5632'
+        servidorIsOff = true;
+        forceUpdate();
+
+
+      } else {
+        // servidorIsOff = false;
+        // forceUpdate();
+        // console.log(err)
+      }
     }
     // const response = await api.get('/product/list')
 
@@ -42,10 +80,13 @@ export default function Main({ navigation }) {
 
   // AsyncStorage.getItem('host').then(host => {
   // })
-
+  // barWidth = 
   return (
 
     <View style={styles.container}>
+      {
+        servidorIsOff ? <ServidorState barWidth={Dimensions.get('window').width} textToShow={_text || 'Problemas na conexão'} colorToShow={_color || '#FF5632'} /> : null
+      }
       <ScrollView>
         {products.map(product => {
           return (
@@ -73,7 +114,7 @@ export default function Main({ navigation }) {
           )
         })}
       </ScrollView>
-      <TouchableOpacity onPress={() => navigation.navigate("CadastrarProduto")} style={styles.floatingBtn}>
+      <TouchableOpacity onPress={() => navigation.navigate("CadastrarProduto", categories)} style={styles.floatingBtn}>
         <Text style={styles.floatingBtnText}>+</Text>
       </TouchableOpacity>
     </View>
