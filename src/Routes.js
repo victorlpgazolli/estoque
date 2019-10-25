@@ -65,7 +65,6 @@ const appNav = createStackNavigator({
     navigationOptions: ({ navigation }) => ({
       title: 'Configurações',
       headerLeft: null,
-      title: 'Configurações',
       tabBarIcon: ({ tintColor }) => (
         <Icon name='cogs' size={24} />
       ),
@@ -81,6 +80,7 @@ const appNav = createStackNavigator({
     screen: CadastrarProduto,
     navigationOptions: ({ navigation }) => ({
       title: 'Cadastrar Produto',
+      headerLeft: null
     }),
   },
   CadastrarLogin: {

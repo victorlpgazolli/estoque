@@ -3,58 +3,21 @@ import React, { useEffect, useState, Component, useCallback } from 'react';
 import { KeyboardAvoidingView, ScrollView, Platform, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, BackHandler, ToastAndroid } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
 import api from '../services/api'
+import Icon from 'react-native-vector-icons/FontAwesome';
 // var product = [{
 //   nm_produto: 'eita',
 //   cd_produto: 1,
 //   qt_produto_atual: 10
 // }]
-var categories = [];
+global.products = []
+global.categories = []
 var _text = 'Carregando...', _color = 'transparent', servidorIsOff = true;
 class ServidorState extends Component {
-  render() {
-    return (
-      <View style={{
-        width: this.props.barWidth, backgroundColor: this.props.colorToShow, justifyContent: 'center',
-        alignItems: "center", padding: 2
-      }}><Text>{this.props.textToShow}</Text></View>
-    )
-  }
-}
-
-export default function Main({ navigation }) {
-  const [products, setProduct] = useState([]);
-  const [, updateState] = React.useState();
-  const forceUpdate = useCallback(() => updateState({}), []);
-  useEffect(async () => {
+  state = { products: [] }
+  async componentDidMount() {
     try {
-      const { data } = await api.get('/product/list')
-      // console.info(response.data);
-      // tempArray.forEach(async (prod, index) => {
-      //   const { data } = await api.get('/category/' + prod.fk_categoria)
-      //   console.log(data[0].nm_categoria + tempArray[index].fk_categoria)
-      //   tempArray[index].fk_categoria = data.nm_categoria
-      // })
-      setProduct(data)
 
-      const { data: _categories } = await api.get('/category/list')
-
-      categories = Object.keys(_categories).map(function (key) {
-        return [_categories[key]];
-      });
-      
-      console.log(categories);
       servidorIsOff = false;
-      forceUpdate();
-
-
-      // console.log("EITA POURA: " +products)
-
-      // setProduct(product)
-
-      //const { docs } = response.data;
-
-      //console.log(docs);
-
     } catch (err) {
       // TODO
       // adicionar tratamento da exceção
@@ -64,23 +27,39 @@ export default function Main({ navigation }) {
         _text = 'Problemas na conexão';
         _color = '#FF5632'
         servidorIsOff = true;
-        forceUpdate();
-
 
       } else {
         // servidorIsOff = false;
         // forceUpdate();
-        // console.log(err)
+        console.log(err)
       }
     }
-    // const response = await api.get('/product/list')
-
-    // console.log(response)
-  }, []);
-
-  // AsyncStorage.getItem('host').then(host => {
-  // })
-  // barWidth = 
+  }
+  render() {
+    return (
+      <View style={{
+        width: this.props.barWidth, backgroundColor: this.props.colorToShow, justifyContent: 'center',
+        alignItems: "center", padding: 2
+      }}><Text>{this.props.textToShow}</Text></View>
+    )
+  }
+}
+export default function Main({ navigation }) {
+  const [products, setProduct] = useState([]);
+  const [, updateState] = React.useState();
+  const [isNew, updateisNew] = useState(false);
+  const forceUpdate = useCallback(() => updateState({}), []);
+  useEffect(async () => {
+    setTimeout(async () => {
+      const { data } = await api.get('/product/list')
+      const { data: _categories } = await api.get('/category/list')
+      global.categories = Object.keys(_categories).map(function (key) {
+        return [_categories[key]];
+      });
+      global.products = data
+      setProduct(global.products)
+    }, 2000)
+  }, [isNew])
   return (
 
     <View style={styles.container}>
@@ -88,7 +67,7 @@ export default function Main({ navigation }) {
         servidorIsOff ? <ServidorState barWidth={Dimensions.get('window').width} textToShow={_text || 'Problemas na conexão'} colorToShow={_color || '#FF5632'} /> : null
       }
       <ScrollView>
-        {products.map(product => {
+        {global.products.map(product => {
           return (
             <TouchableOpacity onPress={() => navigation.navigate('Product', product)} key={product.cd_produto} style={styles.productItem}>
               <View style={styles.productInfo}>
@@ -114,8 +93,11 @@ export default function Main({ navigation }) {
           )
         })}
       </ScrollView>
-      <TouchableOpacity onPress={() => navigation.navigate("CadastrarProduto", categories)} style={styles.floatingBtn}>
+      <TouchableOpacity onPress={() => navigation.navigate("CadastrarProduto",global.categories)} style={[styles.floatingBtn, styles.floatRight]}>
         <Text style={styles.floatingBtnText}>+</Text>
+      </TouchableOpacity>
+      <TouchableOpacity onPress={() => { updateisNew(!isNew) }} style={[styles.floatingBtn, styles.floatLeft]}>
+        <Text style={styles.floatingBtnText}>↻</Text>
       </TouchableOpacity>
     </View>
   );
@@ -193,7 +175,6 @@ const styles = StyleSheet.create({
     width: 60,
     height: 60,
     position: 'absolute',
-    right: 0,
     bottom: 0,
     margin: 15,
     shadowColor: "#000",
@@ -205,6 +186,12 @@ const styles = StyleSheet.create({
     shadowRadius: 3.84,
 
     elevation: 5,
+  },
+  floatRight: {
+    right: 0
+  },
+  floatLeft: {
+    left: 0
   },
   floatingBtnText: {
     fontSize: 40,
