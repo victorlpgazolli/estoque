@@ -11,13 +11,14 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 // }]
 global.products = []
 global.categories = []
-var _text = 'Carregando...', _color = 'transparent', servidorIsOff = true;
+var _text = 'Carregando...', _color = 'transparent', servidorIsOff = true , loading= true;
 class ServidorState extends Component {
   state = { products: [] }
   async componentDidMount() {
     try {
 
       servidorIsOff = false;
+      loading = false;
     } catch (err) {
       // TODO
       // adicionar tratamento da exceção
@@ -49,15 +50,25 @@ export default function Main({ navigation }) {
   const [, updateState] = React.useState();
   const [isNew, updateisNew] = useState(false);
   const forceUpdate = useCallback(() => updateState({}), []);
-  useEffect(async () => {
+  useEffect(() => {
     setTimeout(async () => {
-      const { data } = await api.get('/product/list')
-      const { data: _categories } = await api.get('/category/list')
-      global.categories = Object.keys(_categories).map(function (key) {
-        return [_categories[key]];
-      });
-      global.products = data
-      setProduct(global.products)
+      try {
+        const { data } = await api.get('/product/list')
+        const { data: _categories } = await api.get('/category/list')
+        global.categories = Object.keys(_categories).map(function (key) {
+          return [_categories[key]];
+        });
+        servidorIsOff = false;
+        global.products = data
+        setProduct(global.products)
+      } catch(err){
+        _text = 'Problemas na conexão';
+        _color = '#FF5632'
+        servidorIsOff = true;
+        loading = false;
+        forceUpdate()
+       console.log(err)
+      }
     }, 2000)
   }, [isNew])
   return (
@@ -93,10 +104,10 @@ export default function Main({ navigation }) {
           )
         })}
       </ScrollView>
-      <TouchableOpacity onPress={() => navigation.navigate("CadastrarProduto",global.categories)} style={[styles.floatingBtn, styles.floatRight]}>
+      <TouchableOpacity disabled={servidorIsOff} onPress={() => navigation.navigate("CadastrarProduto", global.categories)} style={[styles.floatingBtn, styles.floatRight]}>
         <Text style={styles.floatingBtnText}>+</Text>
       </TouchableOpacity>
-      <TouchableOpacity onPress={() => { updateisNew(!isNew) }} style={[styles.floatingBtn, styles.floatLeft]}>
+      <TouchableOpacity disabled={loading} onPress={() => { servidorIsOff = true; updateisNew(!isNew) }} style={[styles.floatingBtn, styles.floatLeft]}>
         <Text style={styles.floatingBtnText}>↻</Text>
       </TouchableOpacity>
     </View>
