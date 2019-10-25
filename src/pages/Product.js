@@ -10,7 +10,6 @@ export default function Product({ navigation }) {
             if (product) {
                 setProduct(navigation.state.params)
             } else {
-                
             }
         } catch{
             navigation.navigate('Principal')
@@ -33,8 +32,6 @@ export default function Product({ navigation }) {
 // };
 const styles = StyleSheet.create({
     container: {
-        // justifyContent: "center",
-        // alignItems: "center",
         backgroundColor: '#fff'
     },
     images: {

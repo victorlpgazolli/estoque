@@ -1,7 +1,8 @@
 
 import React, { useEffect, useState, useCallback, Component } from 'react';
-import { View, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity } from 'react-native'
+import { View, StyleSheet, Text, BackHandler, TextInput, ToastAndroid, TouchableOpacity } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
+import { NavigationActions } from 'react-navigation';
 import RNPickerSelect from 'react-native-picker-select';
 var _product = {
   name: '',
@@ -17,12 +18,11 @@ var categories = []
 class SelectBox extends Component {
   state = { categories: [], selectedCategory: '' }
   updateUser = (_category) => {
-    console.log(_category)
     _product.category = _category;
-    console.log(_product)
     this.setState({ selectedCategory: _category })
   }
-  UNSAFE_componentWillMount() {
+  async UNSAFE_componentWillMount() {
+
     // console.log(this.props.categories);
     // var temp = Object.keys(this.props.categories).map(i => JSON.parse(this.props.categories[Number(i)])) 
     // this.setState({ categories: this.props.categories })
@@ -31,9 +31,16 @@ class SelectBox extends Component {
       var key = this.props.categories[i][0].cd_categoria;
       var label = this.props.categories[i][0].nm_categoria;
       var color = '#000'
-      categories.push({ label: label, value: key, color: color })
+      if (categories.length > 0) {
+        categories.includes(`${key}`) ?
+          this.setState({ categories: categories.push({ label: label, value: key, color: color }) })
+          : categories = categories;
+      } else {
+        this.setState({ categories: categories.push({ label: label, value: key, color: color }) })
+      }
     }
     console.log(categories)
+
     // this.props.categories.foreach((item) => { 
     //   this.setState({categories: categories.push(item)})
     // })
@@ -52,18 +59,22 @@ class SelectBox extends Component {
 }
 
 export default function RegisterProduct({ navigation }) {
+  useEffect(() => {
 
+  }, [])
+  const handleBackButton = function () {
+    navigation.navigate('Produtos', { ok: 'ok' })
+    return true;
+  }
+  BackHandler.addEventListener('hardwareBackPress', handleBackButton);
   async function handleSubmit() {
-    if (validateInputs()) {
+    if (validateInputs(1)) {
       try {
-        // funçao de inserir
         const response = await api.post('/product/add', _product)
-        .then(item => {navigation.navigate("Principal")})
-        .catch(err => console.error(err))
-        console.log(response)
+          .then(item => { navigation.navigate("Principal") })
+          .catch(err => console.error(err))
       } catch (error) {
         ToastAndroid.show("problema ao cadastrar produto", ToastAndroid.SHORT);
-        console.log(error)
       }
 
       navigation.navigate("Principal")
@@ -71,27 +82,26 @@ export default function RegisterProduct({ navigation }) {
     //const response = await api.post('/users', { username: user })
 
   }
-  function validateInputs() {
-    console.log(_product)
+  function validateInputs(_type) {
     if (_product.name.length != 0) {
       if (_product.qnt_atual.length != 0) {
         if (_product.qnt_min.length != 0) {
           if (_product.valor_atual.length != 0) {
             return true;
           } else {
-            ToastAndroid.show('Digite o preço', ToastAndroid.SHORT);
+            _type == 1 ? ToastAndroid.show('Digite o preço', ToastAndroid.SHORT) : null;
             return false;
           }
         } else {
-          ToastAndroid.show('Digite a quantidade mínima', ToastAndroid.SHORT);
+          _type == 1 ? ToastAndroid.show('Digite a quantidade mínima', ToastAndroid.SHORT) : null;
           return false;
         }
       } else {
-        ToastAndroid.show('Digite a quantidade atual', ToastAndroid.SHORT);
+        _type == 1 ? ToastAndroid.show('Digite a quantidade atual', ToastAndroid.SHORT) : null;
         return false;
       }
     } else {
-      ToastAndroid.show('Digite o nome', ToastAndroid.SHORT);
+      _type == 1 ? ToastAndroid.show('Digite o nome', ToastAndroid.SHORT) : null
       return false;
     }
   }
