@@ -1,6 +1,10 @@
 
 import React, { useEffect, useState, Component, useCallback } from 'react';
-import { KeyboardAvoidingView, ScrollView, Platform, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, BackHandler, ToastAndroid } from 'react-native'
+import { KeyboardAvoidingView, ScrollView, UIManager, TextInput, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, BackHandler, ToastAndroid } from 'react-native'
+import Modal from "react-native-modal";
+import * as Animatable from 'react-native-animatable';
+import SearchInput, { createFilter } from 'react-native-search-filter';
+import { Footer } from 'native-base';
 import AsyncStorage from '@react-native-community/async-storage'
 import api from '../services/api'
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -9,9 +13,13 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 //   cd_produto: 1,
 //   qt_produto_atual: 10
 // }]
+
+global.popup_actions = false;
+global.popup_register = false;
 global.products = []
 global.categories = []
-var _text = 'Carregando...', _color = 'transparent', servidorIsOff = true , loading= true;
+const KEYS_TO_FILTERS = ['product.nm_produto', 'nm_produto'];
+var _text = 'Carregando...', _color = 'transparent', servidorIsOff = true, loading = true, searchTerms = false;
 class ServidorState extends Component {
   state = { products: [] }
   async componentDidMount() {
@@ -49,6 +57,7 @@ export default function Main({ navigation }) {
   const [products, setProduct] = useState([]);
   const [, updateState] = React.useState();
   const [isNew, updateisNew] = useState(false);
+  const [term, updateiTerm] = useState('');
   const forceUpdate = useCallback(() => updateState({}), []);
   useEffect(() => {
     setTimeout(async () => {
@@ -60,25 +69,72 @@ export default function Main({ navigation }) {
         });
         servidorIsOff = false;
         global.products = data
+        loading = false;
         setProduct(global.products)
-      } catch(err){
+      } catch (err) {
         _text = 'Problemas na conexão';
         _color = '#FF5632'
         servidorIsOff = true;
         loading = false;
         forceUpdate()
-       console.log(err)
+        console.log(err)
       }
     }, 2000)
   }, [isNew])
-  return (
+  var showPopup = function (popup, product) {
+    if (popup == 1) {
+      global.popup_actions = true;
+      console.log(product)
+    } else if (popup == 2) {
+      global.popup_register = true;
+    }
+    forceUpdate()
+  }
+  var hidePopup = function (popup, product) {
+    if (popup == 1) {
+      global.popup_actions = false;
+      console.log(product)
+    } else if (popup == 2) {
+      global.popup_register = false;
+    }
+    forceUpdate()
+  }
+  function handleConfirm() {
 
+  }
+  function searchUpdated(term) {
+    updateiTerm(term)
+  }
+  async function deleteProd(codigo_prod) {
+    let _produto = {
+      codigo: codigo_prod
+    }
+    const response = await api.post('/product/delete', _produto)
+    if (response.status == 200) {
+      ToastAndroid.show(`Deletado com sucesso`, ToastAndroid.SHORT);
+      global.popup_actions = false;
+      _text = 'Carregando...', _color = 'transparent', servidorIsOff = true, loading = true;
+      updateisNew(!isNew)
+    }
+    console.log(response)
+  }
+  const filteredProducts = global.products.filter(createFilter(term, KEYS_TO_FILTERS))
+  return (
+//global.products
     <View style={styles.container}>
       {
         servidorIsOff ? <ServidorState barWidth={Dimensions.get('window').width} textToShow={_text || 'Problemas na conexão'} colorToShow={_color || '#FF5632'} /> : null
       }
+      {
+        searchTerms ? 
+      <SearchInput
+        onChangeText={(term) => { searchUpdated(term) }}
+        style={[styles.searchInput]}
+        placeholder="Pesquisar por nome"
+      /> : null
+      }
       <ScrollView>
-        {global.products.map(product => {
+        {filteredProducts.map(product => {
           return (
             <TouchableOpacity onPress={() => navigation.navigate('Product', product)} key={product.cd_produto} style={styles.productItem}>
               <View style={styles.productInfo}>
@@ -95,8 +151,74 @@ export default function Main({ navigation }) {
                     <Text style={[styles.productTagInfo, styles.productDetais]}>qnt atual</Text>
                   </View>
                   <View style={[styles.qntView]}>
-                    <Text style={[styles.productTag, styles.productInfoItem]}>{product.fk_categoria}</Text>
-                    <Text style={[styles.productTagInfo, styles.productDetais]}>categoria</Text>
+                    {/* <Text style={[styles.productTag, styles.productInfoItem]}>{product.fk_categoria}</Text>
+                    <Text style={[styles.productTagInfo, styles.productDetais]}>categoria</Text> */}
+                    {/* <PopupMenu actions={['Editar quantidade', 'Apagar']} style={{ width: 50 }} onPress={onPopupEvent} /> */}
+                    <TouchableOpacity style={{ width: 40, height: 30, alignItems: 'center', justifyContent: "center" }} onPress={() => { showPopup(1, product) }}>
+                      <Icon name='ellipsis-v' size={24} />
+                    </TouchableOpacity>
+                    <Modal backdropColor={'#00000030'} isVisible={global.popup_actions}
+                      animationIn="slideInDown"
+                      animationOut="slideOutDown"
+                      animationInTiming={600}
+                      animationOutTiming={600}
+                      onBackdropPress={() => { hidePopup(1, product) }}>
+                      <View style={{ flex: 1 }}>
+                        <View style={[styles.operation]}>
+                          <View style={[styles.card, styles.shadow]}>
+                            {/* <TextInput
+                              onChangeText={val => qnt_atual = val}
+                              placeholder={global.transaction ? 'Adicionar' : 'Remover'}
+                              autoCapitalize="none"
+                              autoCorrect={false}
+                              style={styles.input}
+                            /> */}
+                            <Text style={[styles.submitBtnText, styles.colorBlack]}>Operação que deseja fazer:</Text>
+                            <View style={[styles.actions]}>
+                              <TouchableOpacity onPress={() => { global.operation = false; forceUpdate() }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
+                                <Text style={[styles.submitBtnText, styles.colorBlack]}>Adicionar quantidade de produtos</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity onPress={handleConfirm} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
+                                <Text style={[styles.submitBtnText, styles.colorBlack]}>Remover quantidade de produtos</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity onPress={() => { deleteProd(product.cd_produto) }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
+                                <Text style={[styles.submitBtnText, styles.colorBlack]}>Apagar produto</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    </Modal>
+
+                    <Modal backdropColor={'#00000030'} isVisible={global.popup_register}
+                      animationIn="slideInDown"
+                      animationOut="slideOutDown"
+                      animationInTiming={600}
+                      animationOutTiming={600}
+                      onBackdropPress={() => { hidePopup(2) }}>
+                      <View style={{ flex: 1 }}>
+                        <View style={[styles.operation]}>
+                          <View style={[styles.card, styles.shadow, { height: 150 }]}>
+                            {/* <TextInput
+                              onChangeText={val => qnt_atual = val}
+                              placeholder={global.transaction ? 'Adicionar' : 'Remover'}
+                              autoCapitalize="none"
+                              autoCorrect={false}
+                              style={styles.input}
+                            /> */}
+                            <Text style={[styles.submitBtnText, styles.colorBlack]}>Operação que deseja fazer:</Text>
+                            <View style={[styles.actions]}>
+                              <TouchableOpacity onPress={() => { hidePopup(2); navigation.navigate("CadastrarProduto", global.categories) }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
+                                <Text style={[styles.submitBtnText, styles.colorBlack]}>Cadastrar Novo Produto</Text>
+                              </TouchableOpacity>
+                              <TouchableOpacity onPress={() => { hidePopup(2); navigation.navigate("CadastrarCategoria", global.categories) }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
+                                <Text style={[styles.submitBtnText, styles.colorBlack]}>Cadastrar Nova Categoria</Text>
+                              </TouchableOpacity>
+                            </View>
+                          </View>
+                        </View>
+                      </View>
+                    </Modal>
                   </View>
                 </View>
               </View>
@@ -104,7 +226,7 @@ export default function Main({ navigation }) {
           )
         })}
       </ScrollView>
-      <TouchableOpacity disabled={servidorIsOff} onPress={() => navigation.navigate("CadastrarProduto", global.categories)} style={[styles.floatingBtn, styles.floatRight]}>
+      <TouchableOpacity disabled={servidorIsOff} onPress={() => { showPopup(2) }} style={[styles.floatingBtn, styles.floatRight]}>
         <Text style={styles.floatingBtnText}>+</Text>
       </TouchableOpacity>
       <TouchableOpacity disabled={loading} onPress={() => { servidorIsOff = true; updateisNew(!isNew) }} style={[styles.floatingBtn, styles.floatLeft]}>
@@ -118,6 +240,19 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#ccc',
     justifyContent: 'flex-start'
+  },
+  actions: {
+    margin: 10,
+  },
+  indivAction: {
+    paddingVertical: 10,
+    paddingHorizontal: 20,
+    borderColor: '#00000060',
+    borderWidth: 1,
+  },
+  colorBlack: {
+    color: '#000',
+    fontSize: 16
   },
   productItem: {
     borderBottomWidth: 0.5,
@@ -158,6 +293,59 @@ const styles = StyleSheet.create({
   },
   productTagInfo: {
 
+  },
+  operation: {
+    paddingHorizontal: 10,
+    top: 150,
+    position: 'absolute',
+    height: 140,
+    paddingTop: 10,
+    right: 0,
+    left: 0
+  },
+  card: {
+    padding: 10,
+    backgroundColor: '#ffffff80',
+    height: 200,
+    margin: 0,
+    minWidth: 330,
+    alignSelf: "center"
+  },
+  operationBTN: {
+    position: 'absolute',
+    width: '30%',
+    borderRadius: 12,
+    borderWidth: 1,
+    bottom: 10,
+  },
+  rightMargin: {
+    marginRight: '50%',
+    marginLeft: 20,
+  },
+  leftMargin: {
+    marginLeft: '50%',
+    marginRight: 0,
+  },
+  shadow: {
+    shadowColor: "#000",
+    shadowOffset: {
+      width: 0,
+      height: 2,
+    },
+    shadowOpacity: 0.25,
+    shadowRadius: 3.84,
+
+    elevation: 5,
+  },
+  input: {
+    height: 46,
+    backgroundColor: "#f9f9f9",
+    borderColor: '#4E7AF3',
+    borderBottomWidth: 1,
+    borderRadius: 4,
+    marginVertical: 0,
+    marginHorizontal: 10,
+    paddingHorizontal: 15,
   },
   productDetais: {
     color: '#ccc',
