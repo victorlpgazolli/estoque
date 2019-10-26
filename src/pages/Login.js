@@ -25,7 +25,7 @@ export default function Login ({ navigation }) {
   async function handleLogin () {
         //await AsyncStorage.setItem('username', username);
         //const response = await api.post('/users', { username: user })
-        navigation.navigate('tabNav')
+        navigation.navigate('Produtos')
         // AsyncStorage.getItem('@account_email').then(user => {
         //     if (user == email) {
         //     }else{

@@ -81,6 +81,8 @@ export default function Main({ navigation }) {
       }
     }, 2000)
   }, [isNew])
+  searchTerms =  navigation.getParam('visible', false)
+
   var showPopup = function (popup, product) {
     if (popup == 1) {
       global.popup_actions = true;
@@ -120,18 +122,18 @@ export default function Main({ navigation }) {
   }
   const filteredProducts = global.products.filter(createFilter(term, KEYS_TO_FILTERS))
   return (
-//global.products
+    //global.products
     <View style={styles.container}>
       {
         servidorIsOff ? <ServidorState barWidth={Dimensions.get('window').width} textToShow={_text || 'Problemas na conexão'} colorToShow={_color || '#FF5632'} /> : null
       }
       {
-        searchTerms ? 
-      <SearchInput
-        onChangeText={(term) => { searchUpdated(term) }}
-        style={[styles.searchInput]}
-        placeholder="Pesquisar por nome"
-      /> : null
+        searchTerms ?
+          <SearchInput
+            onChangeText={(term) => { searchUpdated(term) }}
+            style={[styles.searchInput]}
+            placeholder="Pesquisar por nome"
+          /> : null
       }
       <ScrollView>
         {filteredProducts.map(product => {
