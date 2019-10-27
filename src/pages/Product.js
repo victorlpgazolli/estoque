@@ -14,14 +14,19 @@ export default function Product({ navigation }) {
     useEffect(() => {
         try {
             if (product) {
-                setProduct(navigation.state.params)
+                var { produto } = navigation.state.params
+                setProduct(produto)
+                var { action } = navigation.state.params
+                global.transaction = action;
+                global.operation = true;
+                console.log(produto)
             } else {
             }
         } catch{
             navigation.navigate('Principal')
         }
     }, [global.operation]);
-    function handleConfirm(){
+    function handleConfirm() {
 
     }
     return (
@@ -44,36 +49,37 @@ export default function Product({ navigation }) {
                 </View>
             </View>
             {
-                global.operation ? <View style={[styles.operation]}>
-                <View style={[styles.card, styles.shadow]}>
-                    <TextInput
-                        onChangeText={val => qnt_atual = val}
-                        placeholder={global.transaction  ? 'Adicionar': 'Remover'}
-                        autoCapitalize="none"
-                        autoCorrect={false}
-                        style={styles.input}
-                    />
-                    <Footer style={{ backgroundColor: '#fff' }}>
-                        <TouchableOpacity onPress={()=>{global.operation = false; forceUpdate()}} style={[styles.submitBtn, styles.floatRight]}>
-                            <Text style={[styles.submitBtnText, styles.colorBlack]}>Cancelar</Text>
-                        </TouchableOpacity>
-                        <TouchableOpacity onPress={handleConfirm} style={[styles.submitBtn, styles.floatLeft,]}>
-                            <Text style={[styles.submitBtnText, styles.colorBlack]}>Confirmar</Text>
-                        </TouchableOpacity>
-                    </Footer>
-                </View>
-            </View> : null
+                global.operation ?
+                    <View style={[styles.operation,styles.shadow]}>
+                        <View style={[styles.card]}>
+                            <TextInput
+                                onChangeText={val => qnt_atual = val}
+                                placeholder={global.transaction ? 'Adicionar' : 'Remover'}
+                                autoCapitalize="none"
+                                autoCorrect={false}
+                                style={styles.input}
+                            />
+                            <Footer style={{ backgroundColor: '#fff' }}>
+                                <TouchableOpacity onPress={() => { global.operation = false; forceUpdate() }} style={[styles.submitBtn, styles.floatRight]}>
+                                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Cancelar</Text>
+                                </TouchableOpacity>
+                                <TouchableOpacity onPress={handleConfirm} style={[styles.submitBtn, styles.floatLeft,]}>
+                                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Confirmar</Text>
+                                </TouchableOpacity>
+                            </Footer>
+                        </View>
+                    </View> : null
             }
 
 
-            <Footer style={{ backgroundColor: '#fff' }}>
+            {/* <Footer style={{ backgroundColor: '#fff' }}>
                 <TouchableOpacity onPress={() => { global.operation = true; global.transaction = false; forceUpdate() }} style={[styles.submitBtn, styles.floatRight, styles.colorRed]}>
                     <Text style={styles.submitBtnText}>Remover</Text>
                 </TouchableOpacity>
                 <TouchableOpacity onPress={() => { global.operation = true; global.transaction = true; forceUpdate() }} style={[styles.submitBtn, styles.floatLeft, styles.colorBlue]}>
                     <Text style={styles.submitBtnText}>Adicionar</Text>
                 </TouchableOpacity>
-            </Footer>
+            </Footer> */}
         </View>
     );
 };
@@ -114,7 +120,6 @@ const styles = StyleSheet.create({
     },
     card: {
         padding: 10,
-        backgroundColor: '#ffffff80',
         height: '90%',
         margin: 0,
         minWidth: 330,
