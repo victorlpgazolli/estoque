@@ -7,6 +7,7 @@ import Login from './pages/Login'
 import Produtos from './pages/Main'
 import Cadastrar from './pages/Register'
 import CadastrarProduto from './pages/RegisterProduct'
+import CadastrarCategoria from './pages/RegisterCategory'
 import Configurações from './pages/Config'
 import Product from './pages/Product'
 
@@ -118,13 +119,20 @@ const appNav = createStackNavigator({
   Product: {
     screen: Product,
     navigationOptions: ({ navigation }) => ({
-
+      title: 'Realizar operação'
     }),
   },
   CadastrarProduto: {
     screen: CadastrarProduto,
     navigationOptions: ({ navigation }) => ({
       title: 'Cadastrar Produto',
+      headerLeft: null
+    }),
+  },
+  CadastrarCategoria: {
+    screen: CadastrarCategoria,
+    navigationOptions: ({ navigation }) => ({
+      title: 'Cadastrar Categoria',
       headerLeft: null
     }),
   },
