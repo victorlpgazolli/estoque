@@ -21,26 +21,26 @@ class SelectBox extends Component {
     _product.category = _category;
     this.setState({ selectedCategory: _category })
   }
-  async UNSAFE_componentWillMount() {
+  UNSAFE_componentWillMount() {
 
     // console.log(this.props.categories);
     // var temp = Object.keys(this.props.categories).map(i => JSON.parse(this.props.categories[Number(i)])) 
     // this.setState({ categories: this.props.categories })
     // console.log(`${(this.props.categories)}`);
     for (let i = 0; i < this.props.categories.length; i++) {
+      categories.pop()
+    }
+    for (let i = 0; i < this.props.categories.length; i++) {
       var key = this.props.categories[i][0].cd_categoria;
       var label = this.props.categories[i][0].nm_categoria;
       var color = '#000'
-      if (categories.length > 0) {
-        categories.includes(`${key}`) ?
-          this.setState({ categories: categories.push({ label: label, value: key, color: color }) })
-          : categories = categories;
-      } else {
-        this.setState({ categories: categories.push({ label: label, value: key, color: color }) })
+      if (categories.includes(`${label}`)) {
+        console.info(categories[i])
       }
-    }
-    console.log(categories)
+      categories.push({ label: label, value: key, color: color })
+      this.setState({ categories: categories })
 
+    }
     // this.props.categories.foreach((item) => { 
     //   this.setState({categories: categories.push(item)})
     // })
@@ -71,8 +71,10 @@ export default function RegisterProduct({ navigation }) {
     if (validateInputs(1)) {
       try {
         const response = await api.post('/product/add', _product)
-          .then(item => { navigation.navigate("Principal") })
-          .catch(err => console.error(err))
+        if(response.status == 200){
+          ToastAndroid.show("Produto cadastrado", ToastAndroid.SHORT);
+          navigation.navigate("Principal")
+        }
       } catch (error) {
         ToastAndroid.show("problema ao cadastrar produto", ToastAndroid.SHORT);
       }
@@ -141,7 +143,6 @@ export default function RegisterProduct({ navigation }) {
           autoCapitalize="none"
           autoCorrect={false}
           style={styles.input}
-          secureTextEntry={true}
         />
       </View>
       <SelectBox categories={navigation.state.params} />
