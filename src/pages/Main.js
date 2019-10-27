@@ -13,11 +13,11 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 //   cd_produto: 1,
 //   qt_produto_atual: 10
 // }]
-
 global.popup_actions = false;
 global.popup_register = false;
 global.products = []
 global.categories = []
+global.tempProd = {}
 const KEYS_TO_FILTERS = ['product.nm_produto', 'nm_produto'];
 var _text = 'Carregando...', _color = 'transparent', servidorIsOff = true, loading = true, searchTerms = false;
 class ServidorState extends Component {
@@ -32,7 +32,6 @@ class ServidorState extends Component {
       // adicionar tratamento da exceção
       ToastAndroid.show(`${err}`, ToastAndroid.SHORT);
       if (err.toString().includes("502")) {
-        // console.log(err)
         _text = 'Problemas na conexão';
         _color = '#FF5632'
         servidorIsOff = true;
@@ -40,7 +39,6 @@ class ServidorState extends Component {
       } else {
         // servidorIsOff = false;
         // forceUpdate();
-        console.log(err)
       }
     }
   }
@@ -67,6 +65,7 @@ export default function Main({ navigation }) {
         global.categories = Object.keys(_categories).map(function (key) {
           return [_categories[key]];
         });
+        console.log(global.categories)
         servidorIsOff = false;
         global.products = data
         loading = false;
@@ -77,25 +76,24 @@ export default function Main({ navigation }) {
         servidorIsOff = true;
         loading = false;
         forceUpdate()
-        console.log(err)
       }
     }, 2000)
   }, [isNew])
-  searchTerms =  navigation.getParam('visible', false)
+  searchTerms = navigation.getParam('visible', false)
 
   var showPopup = function (popup, product) {
+    global.tempProd = product;
     if (popup == 1) {
       global.popup_actions = true;
-      console.log(product)
     } else if (popup == 2) {
       global.popup_register = true;
     }
     forceUpdate()
   }
   var hidePopup = function (popup, product) {
+    global.tempProd = {};
     if (popup == 1) {
       global.popup_actions = false;
-      console.log(product)
     } else if (popup == 2) {
       global.popup_register = false;
     }
@@ -111,6 +109,7 @@ export default function Main({ navigation }) {
     let _produto = {
       codigo: codigo_prod
     }
+
     const response = await api.post('/product/delete', _produto)
     if (response.status == 200) {
       ToastAndroid.show(`Deletado com sucesso`, ToastAndroid.SHORT);
@@ -118,7 +117,6 @@ export default function Main({ navigation }) {
       _text = 'Carregando...', _color = 'transparent', servidorIsOff = true, loading = true;
       updateisNew(!isNew)
     }
-    console.log(response)
   }
   const filteredProducts = global.products.filter(createFilter(term, KEYS_TO_FILTERS))
   return (
@@ -138,7 +136,7 @@ export default function Main({ navigation }) {
       <ScrollView>
         {filteredProducts.map(product => {
           return (
-            <TouchableOpacity onPress={() => navigation.navigate('Product', product)} key={product.cd_produto} style={styles.productItem}>
+            <TouchableOpacity onPress={() => navigation.navigate('Product', { produto: product, action: null })} key={product.cd_produto} style={styles.productItem}>
               <View style={styles.productInfo}>
                 <Text style={[styles.productName, styles.productInfoItem]}>{product.nm_produto}</Text>
                 <View style={[styles.infoView]}>
@@ -160,6 +158,7 @@ export default function Main({ navigation }) {
                       <Icon name='ellipsis-v' size={24} />
                     </TouchableOpacity>
                     <Modal backdropColor={'#00000030'} isVisible={global.popup_actions}
+                      backdropOpacity={1}
                       animationIn="slideInDown"
                       animationOut="slideOutDown"
                       animationInTiming={600}
@@ -177,13 +176,13 @@ export default function Main({ navigation }) {
                             /> */}
                             <Text style={[styles.submitBtnText, styles.colorBlack]}>Operação que deseja fazer:</Text>
                             <View style={[styles.actions]}>
-                              <TouchableOpacity onPress={() => { global.operation = false; forceUpdate() }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
+                              <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: true }); hidePopup(1); }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
                                 <Text style={[styles.submitBtnText, styles.colorBlack]}>Adicionar quantidade de produtos</Text>
                               </TouchableOpacity>
-                              <TouchableOpacity onPress={handleConfirm} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
+                              <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: false }); hidePopup(1); }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
                                 <Text style={[styles.submitBtnText, styles.colorBlack]}>Remover quantidade de produtos</Text>
                               </TouchableOpacity>
-                              <TouchableOpacity onPress={() => { deleteProd(product.cd_produto) }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
+                              <TouchableOpacity onPress={() => { deleteProd(global.tempProd.cd_produto) }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
                                 <Text style={[styles.submitBtnText, styles.colorBlack]}>Apagar produto</Text>
                               </TouchableOpacity>
                             </View>
@@ -210,10 +209,10 @@ export default function Main({ navigation }) {
                             /> */}
                             <Text style={[styles.submitBtnText, styles.colorBlack]}>Operação que deseja fazer:</Text>
                             <View style={[styles.actions]}>
-                              <TouchableOpacity onPress={() => { hidePopup(2); navigation.navigate("CadastrarProduto", global.categories) }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
+                              <TouchableOpacity onPress={() => { navigation.navigate("CadastrarProduto", global.categories); hidePopup(2); }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
                                 <Text style={[styles.submitBtnText, styles.colorBlack]}>Cadastrar Novo Produto</Text>
                               </TouchableOpacity>
-                              <TouchableOpacity onPress={() => { hidePopup(2); navigation.navigate("CadastrarCategoria", global.categories) }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
+                              <TouchableOpacity onPress={() => { navigation.navigate("CadastrarCategoria", global.categories); hidePopup(2); }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
                                 <Text style={[styles.submitBtnText, styles.colorBlack]}>Cadastrar Nova Categoria</Text>
                               </TouchableOpacity>
                             </View>
@@ -329,6 +328,7 @@ const styles = StyleSheet.create({
     marginRight: 0,
   },
   shadow: {
+    backgroundColor: '#fff',
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
