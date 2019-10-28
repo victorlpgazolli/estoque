@@ -73,13 +73,11 @@ export default function RegisterProduct({ navigation }) {
         const response = await api.post('/product/add', _product)
         if(response.status == 200){
           ToastAndroid.show("Produto cadastrado", ToastAndroid.SHORT);
-          navigation.navigate("Principal")
+          navigation.navigate("Produtos")
         }
       } catch (error) {
         ToastAndroid.show("problema ao cadastrar produto", ToastAndroid.SHORT);
       }
-
-      navigation.navigate("Principal")
     }
     //const response = await api.post('/users', { username: user })
 
