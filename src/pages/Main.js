@@ -1,10 +1,10 @@
 
 import React, { useEffect, useState, Component, useCallback } from 'react';
-import { KeyboardAvoidingView, ScrollView, UIManager, TextInput, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, BackHandler, ToastAndroid } from 'react-native'
+import { KeyboardAvoidingView, ScrollView, TextInput, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, BackHandler, ToastAndroid } from 'react-native'
 import Modal from "react-native-modal";
-import * as Animatable from 'react-native-animatable';
 import SearchInput, { createFilter } from 'react-native-search-filter';
 import { Footer } from 'native-base';
+import RNExitApp from 'react-native-exit-app';
 import AsyncStorage from '@react-native-community/async-storage'
 import api from '../services/api'
 import Icon from 'react-native-vector-icons/FontAwesome';
@@ -22,7 +22,7 @@ const KEYS_TO_FILTERS = ['product.nm_produto', 'nm_produto'];
 var _text = 'Carregando...', _color = 'transparent', servidorIsOff = true, loading = true, searchTerms = false;
 class ServidorState extends Component {
   state = { products: [] }
-  async componentDidMount() {
+  componentDidMount() {
     try {
 
       servidorIsOff = false;
@@ -42,6 +42,7 @@ class ServidorState extends Component {
       }
     }
   }
+
   render() {
     return (
       <View style={{
@@ -58,6 +59,7 @@ export default function Main({ navigation }) {
   const [term, updateiTerm] = useState('');
   const forceUpdate = useCallback(() => updateState({}), []);
   useEffect(() => {
+    BackHandler.addEventListener('hardwareBackPress', handleBackButton);
     setTimeout(async () => {
       try {
         const { data } = await api.get('/product/list')
@@ -80,7 +82,10 @@ export default function Main({ navigation }) {
     }, 2000)
   }, [isNew])
   searchTerms = navigation.getParam('visible', false)
-
+  function handleBackButton() {
+    RNExitApp.exitApp()
+    return true;
+  }
   var showPopup = function (popup, product) {
     global.tempProd = product;
     if (popup == 1) {
@@ -90,7 +95,7 @@ export default function Main({ navigation }) {
     }
     forceUpdate()
   }
-  var hidePopup = function (popup, product) {
+  var hidePopup = function (popup) {
     global.tempProd = {};
     if (popup == 1) {
       global.popup_actions = false;
@@ -98,9 +103,6 @@ export default function Main({ navigation }) {
       global.popup_register = false;
     }
     forceUpdate()
-  }
-  function handleConfirm() {
-
   }
   function searchUpdated(term) {
     updateiTerm(term)
@@ -157,75 +159,76 @@ export default function Main({ navigation }) {
                     <TouchableOpacity style={{ width: 40, height: 30, alignItems: 'center', justifyContent: "center" }} onPress={() => { showPopup(1, product) }}>
                       <Icon name='ellipsis-v' size={24} />
                     </TouchableOpacity>
-                    <Modal backdropColor={'#00000030'} isVisible={global.popup_actions}
-                      backdropOpacity={1}
-                      animationIn="slideInDown"
-                      animationOut="slideOutDown"
-                      animationInTiming={600}
-                      animationOutTiming={600}
-                      onBackdropPress={() => { hidePopup(1, product) }}>
-                      <View style={{ flex: 1 }}>
-                        <View style={[styles.operation]}>
-                          <View style={[styles.card, styles.shadow]}>
-                            {/* <TextInput
-                              onChangeText={val => qnt_atual = val}
-                              placeholder={global.transaction ? 'Adicionar' : 'Remover'}
-                              autoCapitalize="none"
-                              autoCorrect={false}
-                              style={styles.input}
-                            /> */}
-                            <Text style={[styles.submitBtnText, styles.colorBlack]}>Operação que deseja fazer:</Text>
-                            <View style={[styles.actions]}>
-                              <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: true }); hidePopup(1); }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
-                                <Text style={[styles.submitBtnText, styles.colorBlack]}>Adicionar quantidade de produtos</Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: false }); hidePopup(1); }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
-                                <Text style={[styles.submitBtnText, styles.colorBlack]}>Remover quantidade de produtos</Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity onPress={() => { deleteProd(global.tempProd.cd_produto) }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
-                                <Text style={[styles.submitBtnText, styles.colorBlack]}>Apagar produto</Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-                    </Modal>
 
-                    <Modal backdropColor={'#00000030'} isVisible={global.popup_register}
-                      animationIn="slideInDown"
-                      animationOut="slideOutDown"
-                      animationInTiming={600}
-                      animationOutTiming={600}
-                      onBackdropPress={() => { hidePopup(2) }}>
-                      <View style={{ flex: 1 }}>
-                        <View style={[styles.operation]}>
-                          <View style={[styles.card, styles.shadow, { height: 150 }]}>
-                            {/* <TextInput
-                              onChangeText={val => qnt_atual = val}
-                              placeholder={global.transaction ? 'Adicionar' : 'Remover'}
-                              autoCapitalize="none"
-                              autoCorrect={false}
-                              style={styles.input}
-                            /> */}
-                            <Text style={[styles.submitBtnText, styles.colorBlack]}>Operação que deseja fazer:</Text>
-                            <View style={[styles.actions]}>
-                              <TouchableOpacity onPress={() => { navigation.navigate("CadastrarProduto", global.categories); hidePopup(2); }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
-                                <Text style={[styles.submitBtnText, styles.colorBlack]}>Cadastrar Novo Produto</Text>
-                              </TouchableOpacity>
-                              <TouchableOpacity onPress={() => { navigation.navigate("CadastrarCategoria", global.categories); hidePopup(2); }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
-                                <Text style={[styles.submitBtnText, styles.colorBlack]}>Cadastrar Nova Categoria</Text>
-                              </TouchableOpacity>
-                            </View>
-                          </View>
-                        </View>
-                      </View>
-                    </Modal>
                   </View>
                 </View>
               </View>
             </TouchableOpacity>
           )
         })}
+        <Modal backdropColor={'#00000060'} isVisible={global.popup_actions}
+          backdropOpacity={1}
+          animationIn="slideInDown"
+          animationOut="slideOutDown"
+          animationInTiming={600}
+          animationOutTiming={600}
+          onBackdropPress={() => { hidePopup(1) }}>
+          <View style={{ flex: 1 }}>
+            <View style={[styles.operation]}>
+              <View style={[styles.card, styles.shadow]}>
+                {/* <TextInput
+                              onChangeText={val => qnt_atual = val}
+                              placeholder={global.transaction ? 'Adicionar' : 'Remover'}
+                              autoCapitalize="none"
+                              autoCorrect={false}
+                              style={styles.input}
+                            /> */}
+                <Text style={[styles.submitBtnText, styles.colorBlack]}>Operação que deseja fazer:</Text>
+                <View style={[styles.actions]}>
+                  <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: true }); hidePopup(1); }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
+                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Adicionar quantidade de produtos</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: false }); hidePopup(1); }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
+                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Remover quantidade de produtos</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => { deleteProd(global.tempProd.cd_produto) }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
+                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Apagar produto</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
+
+        <Modal backdropColor={'#00000060'} isVisible={global.popup_register}
+          animationIn="slideInDown"
+          animationOut="slideOutDown"
+          animationInTiming={600}
+          animationOutTiming={600}
+          onBackdropPress={() => { hidePopup(2) }}>
+          <View style={{ flex: 1 }}>
+            <View style={[styles.operation]}>
+              <View style={[styles.card, styles.shadow, { height: 150 }]}>
+                {/* <TextInput
+                              onChangeText={val => qnt_atual = val}
+                              placeholder={global.transaction ? 'Adicionar' : 'Remover'}
+                              autoCapitalize="none"
+                              autoCorrect={false}
+                              style={styles.input}
+                            /> */}
+                <Text style={[styles.submitBtnText, styles.colorBlack]}>Operação que deseja fazer:</Text>
+                <View style={[styles.actions]}>
+                  <TouchableOpacity onPress={() => { navigation.navigate("CadastrarProduto", global.categories); hidePopup(2); }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
+                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Cadastrar Novo Produto</Text>
+                  </TouchableOpacity>
+                  <TouchableOpacity onPress={() => { navigation.navigate("CadastrarCategoria", global.categories); hidePopup(2); }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
+                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Cadastrar Nova Categoria</Text>
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </ScrollView>
       <TouchableOpacity disabled={servidorIsOff} onPress={() => { showPopup(2) }} style={[styles.floatingBtn, styles.floatRight]}>
         <Text style={styles.floatingBtnText}>+</Text>
