@@ -17,12 +17,12 @@ export default function Login({ navigation }) {
                     console.log(stored_id)
                     if (stored_id.length > 0) {
                         async function getAccount() {
-                            const response = await api.get('/user/' + stored_id)
+                            const { data } = await api.get('/user/' + stored_id)
                             account = {
-                                name: response.data.response.name,
-                                email: response.data.response.email,
-                                password: response.data.response.password,
-                                id: response.data.response._id,
+                                name: data.nm_usuario,
+                                email: data.nm_email,
+                                password: data.cd_senha,
+                                id: data.cd_usuario,
                             }
                         }
                         getAccount()
