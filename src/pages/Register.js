@@ -2,69 +2,77 @@
 import React from 'react';
 import { View, StyleSheet, Text, TextInput, ToastAndroid, TouchableOpacity } from 'react-native'
 import AsyncStorage from '@react-native-community/async-storage'
+import api from '../services/api';
 var account = {
   name: '',
   email: '',
-  password: ''
+  password: '',
+  id: ''
 }
 
 export default function Main({ navigation }) {
   async function handleRegister() {
     if (validateInputs()) {
       try {
-        await AsyncStorage.setItem('@account_email',account.email);
+        const response = await api.post('/user/add', {
+          username: account.name,
+          password: account.password,
+          email: account.email
+        })
+        const { data } = JSON.parse(JSON.stringify(response))
+        data.error ?
+        ToastAndroid.show("E-mail já cadastrado", ToastAndroid.SHORT) :
+        accessGranted(data[0])
       } catch (error) {
         ToastAndroid.show("problema ao criar conta", ToastAndroid.SHORT);
-        console.log(error)
       }
-      
-      navigation.navigate("Principal", account)
+
+
     }
     //const response = await api.post('/users', { username: user })
 
   }
+  async function accessGranted(user) {
+    try{
+      account.id = user.cd_usuario;
+      await AsyncStorage.setItem('@account_id', user.cd_usuario.toString());
+      navigation.navigate("Produtos", account)
+    }catch{
+
+    }
+  }
   function validateInputs() {
-    if (account.name.length != 0) {
-      if (account.email.length != 0) {
-        if (account.password.length != 0) {
-          return true;
-        } else {
-          ToastAndroid.show('Digite a senha', ToastAndroid.SHORT);
-          return false;
-        }
-      } else {
-        ToastAndroid.show('Digite o e-mail', ToastAndroid.SHORT);
-        return false;
-      }
+    if (account.name.trim().length != 0 && account.email.trim().length != 0 && account.password.trim().length != 0) {
+      return true;
     } else {
-      ToastAndroid.show('Digite seu nome', ToastAndroid.SHORT);
+      ToastAndroid.show('Digite os campos', ToastAndroid.SHORT);
       return false;
     }
   }
   return (
     <View style={styles.body}>
       <View style={styles.form}>
-        <Text style={styles.label}>Digite seu nome</Text>
         <TextInput
           onChangeText={val => account.name = val}
-          placeholder="Seu nome"
+          placeholder="Digite seu nome"
+          placeholderTextColor="#999"
           autoCapitalize="none"
           autoCorrect={false}
           style={styles.input}
           maxLength={15}
         />
-        <Text style={styles.label}>Digite seu e-mail</Text>
         <TextInput
           onChangeText={val => account.email = val}
-          placeholder="Seu e-mail"
+          placeholder="Digite seu e-mail"
+          placeholderTextColor="#999"
           autoCapitalize="none"
           autoCorrect={false}
           style={styles.input}
         />
-        <Text style={styles.label}>Digite sua senha</Text>
         <TextInput
           onChangeText={val => account.password = val}
-          placeholder="Sua senha"
+          placeholder="Digite sua senha"
+          placeholderTextColor="#999"
           autoCapitalize="none"
           autoCorrect={false}
           style={styles.input}
@@ -80,25 +88,26 @@ export default function Main({ navigation }) {
 const styles = StyleSheet.create({
   body: {
     flex: 1,
-    backgroundColor: "#fff"
+    backgroundColor: '#fff'
   }, form: {
 
   },
   input: {
     height: 46,
-    backgroundColor: "#f9f9f9",
-    borderColor: '#4E7AF3',
+    backgroundColor: "#fcfcfc",
+    borderColor: "#4E7AF3",
     borderBottomWidth: 1,
     borderRadius: 4,
-    marginVertical: 0,
+    marginTop: 10,
     marginHorizontal: 10,
+    color: '#000',
     paddingHorizontal: 15,
   },
   submitBtn: {
     borderRadius: 10,
-    backgroundColor: '#4E7AF3',
+    backgroundColor: "#4E7AF3",
     width: 310,
-    margin: 10,
+    margin: 25,
     alignSelf: 'center',
     bottom: 0,
     position: 'absolute'
@@ -111,7 +120,7 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
   label: {
-    color: '#00000090',
+    color: '#999',
     marginTop: 2,
     marginLeft: 10,
   }
