@@ -40,6 +40,8 @@ target 'estoque' do
 
   pod 'RNCAsyncStorage', :path => '../node_modules/@react-native-community/async-storage'
 
+  pod 'RNExitApp', :path => '../node_modules/react-native-exit-app'
+
   target 'estoqueTests' do
     inherit! :search_paths
     # Pods for testing
