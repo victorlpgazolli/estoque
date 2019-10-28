@@ -9,11 +9,11 @@ var account = {
     cd_senha: '',
     nm_email: '',
 }
-var newPass = ''
+global.newPass = ''
 
 export default function Main({ navigation }) {
     const [isNew, updateisNew] = useState(false);
-    useEffect(async () => {
+    useEffect(() => {
         try {
             AsyncStorage.getItem('@account_id').then(stored_id => {
                 try {
@@ -93,7 +93,7 @@ export default function Main({ navigation }) {
                         />
                         <Text style={styles.label}>Digite novamente a senha</Text>
                         <TextInput
-                            onChangeText={val => newPass = val}
+                            onChangeText={val => global.newPass = val}
                             placeholder="SENHA"
                             autoCapitalize="none"
                             value={account.cd_senha}
