@@ -8,16 +8,18 @@ import RNExitApp from 'react-native-exit-app';
 import AsyncStorage from '@react-native-community/async-storage'
 import api from '../services/api'
 import Icon from 'react-native-vector-icons/FontAwesome';
-// var product = [{
-//   nm_produto: 'eita',
-//   cd_produto: 1,
-//   qt_produto_atual: 10
-// }]
+
 global.popup_actions = false;
 global.popup_register = false;
 global.products = []
 global.categories = []
 global.tempProd = {}
+var account = {
+  cd_usuario: '',
+  nm_usuario: '',
+  cd_senha: '',
+  nm_email: '',
+}
 const KEYS_TO_FILTERS = ['product.nm_produto', 'nm_produto'];
 var _text = 'Carregando...', _color = 'transparent', servidorIsOff = true, loading = true, searchTerms = false;
 class ServidorState extends Component {
@@ -67,7 +69,6 @@ export default function Main({ navigation }) {
         global.categories = Object.keys(_categories).map(function (key) {
           return [_categories[key]];
         });
-        console.log(global.categories)
         servidorIsOff = false;
         global.products = data
         loading = false;
@@ -82,6 +83,7 @@ export default function Main({ navigation }) {
     }, 2000)
   }, [isNew])
   searchTerms = navigation.getParam('visible', false)
+
   function handleBackButton() {
     RNExitApp.exitApp()
     return true;
@@ -107,6 +109,8 @@ export default function Main({ navigation }) {
   function searchUpdated(term) {
     updateiTerm(term)
   }
+
+
   async function deleteProd(codigo_prod) {
     let _produto = {
       codigo: codigo_prod
