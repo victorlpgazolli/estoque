@@ -14,19 +14,19 @@ export default function Login({ navigation }) {
         try {
             AsyncStorage.getItem('@account_id').then(stored_id => {
                 try {
-                    console.log(stored_id)
                     if (stored_id.length > 0) {
                         async function getAccount() {
                             const { data } = await api.get('/user/' + stored_id)
+                            const { recordset: results } = data
                             account = {
-                                name: data.nm_usuario,
-                                email: data.nm_email,
-                                password: data.cd_senha,
-                                id: data.cd_usuario,
+                                name: results[0].nm_usuario,
+                                email: results[0].nm_email,
+                                password: results[0].cd_senha,
+                                id: results[0].cd_usuario,
                             }
+                            navigation.navigate('Produtos', account)
                         }
                         getAccount()
-                        navigation.navigate('Produtos', account)
                     }
                 } catch{
 
@@ -49,9 +49,8 @@ export default function Login({ navigation }) {
                 try {
                     const { data } = await api.post('/user/login', { email: account.email, password: account.password })
                     const response = JSON.parse(JSON.stringify(data))
-                    if (response.length > 0) {
+                    if (response.rowsAffected > 0) {
                         accessGranted(response[0])
-                        // console.log(response[0])
                     } else {
                         ToastAndroid.show("Login ou senha invalidos", ToastAndroid.SHORT)
                     }
