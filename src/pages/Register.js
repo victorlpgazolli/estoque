@@ -14,15 +14,14 @@ export default function Main({ navigation }) {
   async function handleRegister() {
     if (validateInputs()) {
       try {
-        const response = await api.post('/user/add', {
+        const { data } = await api.post('/user/add', {
           username: account.name,
           password: account.password,
           email: account.email
         })
-        const { data } = JSON.parse(JSON.stringify(response))
         data.error ?
-        ToastAndroid.show("E-mail já cadastrado", ToastAndroid.SHORT) :
-        accessGranted(data[0])
+          ToastAndroid.show("E-mail já cadastrado", ToastAndroid.SHORT) :
+          accessGranted(data.recordset[0])
       } catch (error) {
         ToastAndroid.show("problema ao criar conta", ToastAndroid.SHORT);
       }
@@ -33,11 +32,12 @@ export default function Main({ navigation }) {
 
   }
   async function accessGranted(user) {
-    try{
+    try {
       account.id = user.cd_usuario;
       await AsyncStorage.setItem('@account_id', user.cd_usuario.toString());
+      console.info(account)
       navigation.navigate("Produtos", account)
-    }catch{
+    } catch{
 
     }
   }
