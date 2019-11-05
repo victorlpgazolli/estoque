@@ -2,10 +2,9 @@
 import React, { useEffect, useState, Component, useCallback } from 'react';
 import { KeyboardAvoidingView, ScrollView, TextInput, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, BackHandler, ToastAndroid } from 'react-native'
 import Modal from "react-native-modal";
+import PTRView from 'react-native-pull-to-refresh';
 import SearchInput, { createFilter } from 'react-native-search-filter';
-import { Footer } from 'native-base';
 import RNExitApp from 'react-native-exit-app';
-import AsyncStorage from '@react-native-community/async-storage'
 import api from '../services/api'
 import Icon from 'react-native-vector-icons/FontAwesome';
 
@@ -20,7 +19,7 @@ var account = {
   cd_senha: '',
   nm_email: '',
 }
-const KEYS_TO_FILTERS = ['product.nm_produto', 'nm_produto'];
+const KEYS_TO_FILTERS = ['product.Produto', 'Produto'];
 var _text = 'Carregando...', _color = 'transparent', servidorIsOff = true, loading = true, searchTerms = false;
 class ServidorState extends Component {
   state = { products: [] }
@@ -64,8 +63,10 @@ export default function Main({ navigation }) {
     BackHandler.addEventListener('hardwareBackPress', handleBackButton);
     setTimeout(async () => {
       try {
-        const { data } = await api.get('/product/list')
-        const { data: _categories } = await api.get('/category/list')
+        const { data: rawData } = await api.get('/product/list')
+        const { data: _rawCategories } = await api.get('/category/list')
+        const { recordset: data } = rawData;
+        const { recordset: _categories } = _rawCategories;
         global.categories = Object.keys(_categories).map(function (key) {
           return [_categories[key]];
         });
@@ -124,6 +125,12 @@ export default function Main({ navigation }) {
       updateisNew(!isNew)
     }
   }
+  function refresh() {
+    return new Promise((resolve) => {
+      servidorIsOff = true; updateisNew(!isNew)
+      setTimeout(() => { resolve(); }, 2500)
+    });
+  }
   const filteredProducts = global.products.filter(createFilter(term, KEYS_TO_FILTERS))
   return (
     //global.products
@@ -139,107 +146,107 @@ export default function Main({ navigation }) {
             placeholder="Pesquisar por nome"
           /> : null
       }
-      <ScrollView>
-        {filteredProducts.map(product => {
-          return (
-            <TouchableOpacity onPress={() => navigation.navigate('Product', { produto: product, action: null })} key={product.cd_produto} style={styles.productItem}>
-              <View style={styles.productInfo}>
-                <Text style={[styles.productName, styles.productInfoItem]}>{product.nm_produto}</Text>
-                <View style={[styles.infoView]}>
+      <PTRView onRefresh={refresh} >
+        <ScrollView style={[{ paddingBottom: 100 }]}>
+          {filteredProducts.map(product => {
+            return (
+              <TouchableOpacity onPress={() => navigation.navigate('Product', { produto: product, action: null })} key={product.Codigo} style={styles.productItem}>
+                <View style={styles.productInfo}>
+                  <Text style={[styles.productName, styles.productInfoItem]}>{product.Produto}</Text>
+                  <Text style={[styles.productName, styles.productInfoItem, { position: 'absolute', bottom: 10, left: 10, opacity: 0.6 }]}>{product.Categoria}</Text>
+                  <View style={[styles.infoView]}>
 
-                  <View style={[styles.qntView]}>
-                    <Text style={[styles.productTag, styles.productInfoItem]}>{product.qt_produto_min}</Text>
-                    <Text style={[styles.productTagInfo, styles.productDetais]}>qnt
+                    <View style={[styles.qntView]}>
+                      <Text style={[styles.productTag, styles.productInfoItem]}>{product.Quantidade_Min}</Text>
+                      <Text style={[styles.productTagInfo, styles.productDetais]}>qnt
                     minima</Text>
+                    </View>
+                    <View style={[styles.qntView]}>
+                      <Text style={[styles.productTag, styles.productInfoItem]}>{product.Quantidade_Atual}</Text>
+                      <Text style={[styles.productTagInfo, styles.productDetais]}>qnt atual</Text>
+                    </View>
+                    <View style={[styles.qntView]}>
+                      <TouchableOpacity style={{ width: 40, height: 30, alignItems: 'center', justifyContent: "center" }} onPress={() => { showPopup(1, product) }}>
+                        <Icon name='ellipsis-v' size={24} />
+                      </TouchableOpacity>
+
+                    </View>
                   </View>
-                  <View style={[styles.qntView]}>
-                    <Text style={[styles.productTag, styles.productInfoItem]}>{product.qt_produto_atual}</Text>
-                    <Text style={[styles.productTagInfo, styles.productDetais]}>qnt atual</Text>
-                  </View>
-                  <View style={[styles.qntView]}>
-                    {/* <Text style={[styles.productTag, styles.productInfoItem]}>{product.fk_categoria}</Text>
-                    <Text style={[styles.productTagInfo, styles.productDetais]}>categoria</Text> */}
-                    {/* <PopupMenu actions={['Editar quantidade', 'Apagar']} style={{ width: 50 }} onPress={onPopupEvent} /> */}
-                    <TouchableOpacity style={{ width: 40, height: 30, alignItems: 'center', justifyContent: "center" }} onPress={() => { showPopup(1, product) }}>
-                      <Icon name='ellipsis-v' size={24} />
+                </View>
+              </TouchableOpacity>
+            )
+          })}
+          <Modal backdropColor={'#00000060'} isVisible={global.popup_actions}
+            backdropOpacity={1}
+            animationIn="slideInDown"
+            animationOut="slideOutDown"
+            animationInTiming={600}
+            animationOutTiming={600}
+            onBackdropPress={() => { hidePopup(1) }}>
+            <View style={{ flex: 1 }}>
+              <View style={[styles.operation]}>
+                <View style={[styles.card, styles.shadow]}>
+                  {/* <TextInput
+                              onChangeText={val => qnt_atual = val}
+                              placeholder={global.transaction ? 'Adicionar' : 'Remover'}
+                              autoCapitalize="none"
+                              autoCorrect={false}
+                              style={styles.input}
+                            /> */}
+                  <Text style={[styles.colorBlack]}>Operação que deseja fazer:</Text>
+                  <View style={[styles.actions]}>
+                    <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: true, operation: true }); hidePopup(1); }} style={[styles.indivAction, styles.floatRight]}>
+                      <Text style={[styles.colorBlack]}>Adicionar quantidade de produtos</Text>
                     </TouchableOpacity>
-
+                    <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: true, operation: false }); hidePopup(1); }} style={[styles.indivAction, styles.floatLeft,]}>
+                      <Text style={[styles.colorBlack]}>Remover quantidade de produtos</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { deleteProd(global.tempProd.Codigo) }} style={[styles.indivAction, styles.floatLeft,]}>
+                      <Text style={[styles.colorBlack]}>Apagar produto</Text>
+                    </TouchableOpacity>
                   </View>
                 </View>
               </View>
-            </TouchableOpacity>
-          )
-        })}
-        <Modal backdropColor={'#00000060'} isVisible={global.popup_actions}
-          backdropOpacity={1}
-          animationIn="slideInDown"
-          animationOut="slideOutDown"
-          animationInTiming={600}
-          animationOutTiming={600}
-          onBackdropPress={() => { hidePopup(1) }}>
-          <View style={{ flex: 1 }}>
-            <View style={[styles.operation]}>
-              <View style={[styles.card, styles.shadow]}>
-                {/* <TextInput
-                              onChangeText={val => qnt_atual = val}
-                              placeholder={global.transaction ? 'Adicionar' : 'Remover'}
-                              autoCapitalize="none"
-                              autoCorrect={false}
-                              style={styles.input}
-                            /> */}
-                <Text style={[styles.submitBtnText, styles.colorBlack]}>Operação que deseja fazer:</Text>
-                <View style={[styles.actions]}>
-                  <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: true }); hidePopup(1); }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
-                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Adicionar quantidade de produtos</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: false }); hidePopup(1); }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
-                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Remover quantidade de produtos</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => { deleteProd(global.tempProd.cd_produto) }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
-                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Apagar produto</Text>
-                  </TouchableOpacity>
-                </View>
-              </View>
             </View>
-          </View>
-        </Modal>
+          </Modal>
 
-        <Modal backdropColor={'#00000060'} isVisible={global.popup_register}
-          animationIn="slideInDown"
-          animationOut="slideOutDown"
-          animationInTiming={600}
-          animationOutTiming={600}
-          onBackdropPress={() => { hidePopup(2) }}>
-          <View style={{ flex: 1 }}>
-            <View style={[styles.operation]}>
-              <View style={[styles.card, styles.shadow, { height: 150 }]}>
-                {/* <TextInput
+          <Modal backdropColor={'#00000060'} isVisible={global.popup_register}
+            animationIn="slideInDown"
+            animationOut="slideOutDown"
+            animationInTiming={600}
+            animationOutTiming={600}
+            onBackdropPress={() => { hidePopup(2) }}>
+            <View style={{ flex: 1 }}>
+              <View style={[styles.operation]}>
+                <View style={[styles.card, styles.shadow, { height: 150 }]}>
+                  {/* <TextInput
                               onChangeText={val => qnt_atual = val}
                               placeholder={global.transaction ? 'Adicionar' : 'Remover'}
                               autoCapitalize="none"
                               autoCorrect={false}
                               style={styles.input}
                             /> */}
-                <Text style={[styles.submitBtnText, styles.colorBlack]}>Operação que deseja fazer:</Text>
-                <View style={[styles.actions]}>
-                  <TouchableOpacity onPress={() => { navigation.navigate("CadastrarProduto", global.categories); hidePopup(2); }} style={[styles.submitBtn, styles.indivAction, styles.floatRight]}>
-                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Cadastrar Novo Produto</Text>
-                  </TouchableOpacity>
-                  <TouchableOpacity onPress={() => { navigation.navigate("CadastrarCategoria", global.categories); hidePopup(2); }} style={[styles.submitBtn, styles.indivAction, styles.floatLeft,]}>
-                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Cadastrar Nova Categoria</Text>
-                  </TouchableOpacity>
+                  <Text style={[styles.colorBlack]}>Operação que deseja fazer:</Text>
+                  <View style={[styles.actions]}>
+                    <TouchableOpacity onPress={() => { navigation.navigate("CadastrarProduto", global.categories); hidePopup(2); }} style={[styles.indivAction, styles.floatRight]}>
+                      <Text style={[styles.colorBlack]}>Cadastrar Novo Produto</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity onPress={() => { navigation.navigate("CadastrarCategoria", global.categories); hidePopup(2); }} style={[styles.indivAction, styles.floatLeft,]}>
+                      <Text style={[styles.colorBlack]}>Cadastrar Nova Categoria</Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               </View>
             </View>
-          </View>
-        </Modal>
-      </ScrollView>
+          </Modal>
+        </ScrollView>
+      </PTRView>
       <TouchableOpacity disabled={servidorIsOff} onPress={() => { showPopup(2) }} style={[styles.floatingBtn, styles.floatRight]}>
         <Text style={styles.floatingBtnText}>+</Text>
       </TouchableOpacity>
-      <TouchableOpacity disabled={loading} onPress={() => { servidorIsOff = true; updateisNew(!isNew) }} style={[styles.floatingBtn, styles.floatLeft]}>
+      {/* <TouchableOpacity disabled={loading} onPress={() => { servidorIsOff = true; updateisNew(!isNew) }} style={[styles.floatingBtn, styles.floatLeft]}>
         <Text style={styles.floatingBtnText}>↻</Text>
-      </TouchableOpacity>
+      </TouchableOpacity> */}
     </View>
   );
 };
@@ -271,7 +278,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#fff",
   },
   productInfoItem: {
-    alignSelf: 'center'
+    alignSelf: 'flex-start'
   },
   productName: {
     color: '#000',
