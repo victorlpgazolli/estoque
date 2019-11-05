@@ -1,15 +1,16 @@
 
-import React, { Component, useEffect, useState, useCallback } from 'react';
-import { ScrollView, Platform, StyleSheet, Button, View, Text, TouchableOpacity, ToastAndroid } from 'react-native'
+import React, { Component, useEffect, useState, useRef } from 'react';
+import { ScrollView, Dimensions, StyleSheet, Button, View, Text, TouchableOpacity, ToastAndroid } from 'react-native'
 import { Footer } from 'native-base';
-import { TextInput } from 'react-native-gesture-handler';
 
+import { TextInput } from 'react-native-gesture-handler';
+const _height = Dimensions.get('window').height
+const _width = Dimensions.get('window').width
 global.operation = false
 global.transaction = true;
-var qnt_atual = ''
+
 export default function Product({ navigation }) {
-    const [, updateState] = React.useState();
-    const forceUpdate = useCallback(() => updateState({}), []);
+    const [qnt, updateQnt] = useState('')
     const [product, setProduct] = useState([]);
     useEffect(() => {
         try {
@@ -17,9 +18,9 @@ export default function Product({ navigation }) {
                 var { produto } = navigation.state.params
                 setProduct(produto)
                 var { action } = navigation.state.params
+                var { operation } = navigation.state.params
                 global.transaction = action;
-                global.operation = true;
-                console.log(produto)
+                global.operation = operation;
             } else {
             }
         } catch{
@@ -27,7 +28,10 @@ export default function Product({ navigation }) {
         }
     }, [global.operation]);
     function handleConfirm() {
-
+        if (qnt < product.Quantidade_Atual) {
+            ToastAndroid.show('Imposível realizar operação', ToastAndroid.SHORT)
+            // toastRef.show('hello toast');
+        }
     }
     return (
 
@@ -42,30 +46,39 @@ export default function Product({ navigation }) {
                     <Text style={[styles.itemsText]}>Preço: </Text>
                 </View>
                 <View style={[styles.infoViewChild]}>
-                    <Text style={[styles.itemsText]}>{product.nm_produto}</Text>
-                    <Text style={[styles.itemsText]}>{product.qt_produto_atual}</Text>
-                    <Text style={[styles.itemsText]}>{product.qt_produto_min}</Text>
-                    <Text style={[styles.itemsText]}>{product.vl_produto_atual}</Text>
+                    <Text style={[styles.itemsText]}>{product.Produto}</Text>
+                    <Text style={[styles.itemsText]}>{product.Quantidade_Atual} {global.operation ?
+                        qnt.length > 0 ?
+                            <Text>+ {qnt}</Text> : null :
+                        qnt.length > 0 ?
+                            <Text>- {qnt}</Text> : null
+                    }</Text>
+                    <Text style={[styles.itemsText]}>{product.Quantidade_Min}</Text>
+                    <Text style={[styles.itemsText]}>{product.Valor_Produto}</Text>
                 </View>
             </View>
             {
-                global.operation ?
-                    <View style={[styles.operation,styles.shadow]}>
-                        <View style={[styles.card]}>
+                global.transaction ?
+                    <View style={[styles.shadow, {}]}>
+                        <View style={[]}>
                             <TextInput
-                                onChangeText={val => qnt_atual = val}
-                                placeholder={global.transaction ? 'Adicionar' : 'Remover'}
+                                onChangeText={val => updateQnt(val)}
+                                placeholder={global.operation ? 'Adicionar' : 'Remover'}
                                 autoCapitalize="none"
                                 autoCorrect={false}
                                 style={styles.input}
                             />
-                            <Footer style={{ backgroundColor: '#fff' }}>
-                                <TouchableOpacity onPress={() => { global.operation = false; forceUpdate() }} style={[styles.submitBtn, styles.floatRight]}>
-                                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Cancelar</Text>
-                                </TouchableOpacity>
-                                <TouchableOpacity onPress={handleConfirm} style={[styles.submitBtn, styles.floatLeft,]}>
-                                    <Text style={[styles.submitBtnText, styles.colorBlack]}>Confirmar</Text>
-                                </TouchableOpacity>
+                            <Footer style={[{ backgroundColor: '#ffffff00', flexDirection: 'row' }]}>
+                                <View style={[{ marginRight: 'auto' }]}>
+                                    <TouchableOpacity onPress={() => { global.operation = false; navigation.navigate('Produtos') }} style={[styles.submitBtn, styles.shadow]}>
+                                        <Text style={[styles.submitBtnText, styles.colorBlack]}>Cancelar</Text>
+                                    </TouchableOpacity>
+                                </View>
+                                <View style={[{ marginLeft: 'auto' }]}>
+                                    <TouchableOpacity onPress={handleConfirm} style={[styles.submitBtn, styles.shadow]}>
+                                        <Text style={[styles.submitBtnText, styles.colorBlack]}>Confirmar</Text>
+                                    </TouchableOpacity>
+                                </View>
                             </Footer>
                         </View>
                     </View> : null
@@ -98,7 +111,6 @@ const styles = StyleSheet.create({
         fontSize: 16
     },
     infoView: {
-        flex: 1,
         flexDirection: 'row',
         justifyContent: 'center',
     },
@@ -108,22 +120,6 @@ const styles = StyleSheet.create({
         borderWidth: 1,
         height: 120,
         paddingTop: 10,
-    },
-    operation: {
-        paddingHorizontal: 10,
-        top: 150,
-        position: 'absolute',
-        height: 140,
-        paddingTop: 10,
-        right: 0,
-        left: 0
-    },
-    card: {
-        padding: 10,
-        height: '90%',
-        margin: 0,
-        minWidth: 330,
-        alignSelf: "center"
     },
     operationBTN: {
         position: 'absolute',
@@ -152,10 +148,15 @@ const styles = StyleSheet.create({
         elevation: 5,
     },
     submitBtn: {
-        marginHorizontal: 30,
-        padding: 10,
-        paddingHorizontal: 20,
-        borderRadius: 10
+        borderColor: '#00000000',
+        backgroundColor: '#fff',
+        borderWidth: 1,
+        width: _width / 2 - 11,
+        height: 55,
+        margin: 10,
+        marginTop: 0,
+        justifyContent: 'center',
+        alignItems: 'center'
     },
     submitBtnText: {
         fontSize: 20,
@@ -168,10 +169,7 @@ const styles = StyleSheet.create({
     colorBlue: {
         backgroundColor: '#4E7AF3',
     },
-    floatRight: {
-        alignSelf: 'center'
-    },
-    floatLeft: {
+    floatCenter: {
         alignSelf: 'center'
     },
     input: {
@@ -181,8 +179,9 @@ const styles = StyleSheet.create({
         borderBottomWidth: 1,
         borderRadius: 4,
         marginVertical: 0,
-        marginHorizontal: 10,
         paddingHorizontal: 15,
+        marginHorizontal: 10,
+        marginTop: 10
     },
     itemsText: {
         color: '#000',
