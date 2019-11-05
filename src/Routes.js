@@ -66,7 +66,7 @@ const appNav = createStackNavigator({
       headerLeft: null,
       headerRight: (
         <View style={{ flexDirection: 'row' }}>
-          <TouchableOpacity style={{ paddingLeft: 20 }} onPress={() => { navigation.navigate('Configurações') }}>
+          <TouchableOpacity style={{ paddingLeft: 20 }} onPress={() => { console.log(navigation.state.params);navigation.navigate('Configurações', { account: navigation.state.params }) }}>
             <Icon name='cogs' size={24} />
           </TouchableOpacity>
           <TouchableOpacity style={{ paddingHorizontal: 20 }} onPress={() => { isVisible = !isVisible; navigation.setParams({ visible: isVisible }) }}>
