@@ -64,6 +64,7 @@ export default function Product({ navigation }) {
                             <TextInput
                                 onChangeText={val => updateQnt(val)}
                                 placeholder={global.operation ? 'Adicionar' : 'Remover'}
+                                keyboardType='numeric'
                                 autoCapitalize="none"
                                 autoCorrect={false}
                                 style={styles.input}

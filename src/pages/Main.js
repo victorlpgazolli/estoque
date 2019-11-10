@@ -150,30 +150,29 @@ export default function Main({ navigation }) {
         <ScrollView style={[{ paddingBottom: 100 }]}>
           {filteredProducts.map(product => {
             return (
-              <TouchableOpacity onPress={() => navigation.navigate('Product', { produto: product, action: null })} key={product.Codigo} style={styles.productItem}>
-                <View style={styles.productInfo}>
-                  <Text style={[styles.productName, styles.productInfoItem]}>{product.Produto}</Text>
-                  <Text style={[styles.productName, styles.productInfoItem, { position: 'absolute', bottom: 10, left: 10, opacity: 0.6 }]}>{product.Categoria}</Text>
-                  <View style={[styles.infoView]}>
+              product.status ?
+                <TouchableOpacity onPress={() => navigation.navigate('Product', { produto: product, action: null })} key={product.Codigo} style={styles.productItem}>
+                  <View style={styles.productInfo}>
+                    <Text style={[styles.productName, styles.productInfoItem]}>{product.Produto}</Text>
+                    <Text style={[styles.productName, styles.productInfoItem, { position: 'absolute', bottom: 10, left: 10, opacity: 0.6 }]}>{product.Categoria}</Text>
+                    <View style={[styles.infoView, { flex: 1 }]}>
+                      <View style={[styles.qntView]}>
+                        <Text style={[styles.productTag, styles.productInfoItem, { alignSelf: 'center' }]}>{product.Quantidade_Min}</Text>
+                        <Text style={[styles.productTagInfo, styles.productDetais]}>mínima</Text>
+                      </View>
+                      <View style={[styles.qntView]}>
+                        <Text style={[styles.productTag, styles.productInfoItem, { alignSelf: 'center' }]}>{product.Quantidade_Atual}</Text>
+                        <Text style={[styles.productTagInfo, styles.productDetais]}>atual</Text>
+                      </View>
+                      <View style={[styles.qntView]}>
+                        <TouchableOpacity style={{ width: 40, height: 30, alignItems: 'center', justifyContent: "center" }} onPress={() => { showPopup(1, product) }}>
+                          <Icon name='ellipsis-v' size={24} />
+                        </TouchableOpacity>
 
-                    <View style={[styles.qntView]}>
-                      <Text style={[styles.productTag, styles.productInfoItem]}>{product.Quantidade_Min}</Text>
-                      <Text style={[styles.productTagInfo, styles.productDetais]}>qnt
-                    minima</Text>
-                    </View>
-                    <View style={[styles.qntView]}>
-                      <Text style={[styles.productTag, styles.productInfoItem]}>{product.Quantidade_Atual}</Text>
-                      <Text style={[styles.productTagInfo, styles.productDetais]}>qnt atual</Text>
-                    </View>
-                    <View style={[styles.qntView]}>
-                      <TouchableOpacity style={{ width: 40, height: 30, alignItems: 'center', justifyContent: "center" }} onPress={() => { showPopup(1, product) }}>
-                        <Icon name='ellipsis-v' size={24} />
-                      </TouchableOpacity>
-
+                      </View>
                     </View>
                   </View>
-                </View>
-              </TouchableOpacity>
+                </TouchableOpacity> : null
             )
           })}
           <Modal backdropColor={'#00000060'} isVisible={global.popup_actions}
@@ -183,7 +182,7 @@ export default function Main({ navigation }) {
             animationInTiming={600}
             animationOutTiming={600}
             onBackdropPress={() => { hidePopup(1) }}>
-            <View style={{ flex: 1 }}>
+            <View style={{ top: 0, position: 'absolute', right: 0, left: 0 }}>
               <View style={[styles.operation]}>
                 <View style={[styles.card, styles.shadow]}>
                   {/* <TextInput
@@ -287,7 +286,7 @@ const styles = StyleSheet.create({
   },
   qntView: {
     alignSelf: 'center',
-    paddingHorizontal: 12
+    paddingHorizontal: 25
   },
   infoView: {
     flexDirection: 'row',

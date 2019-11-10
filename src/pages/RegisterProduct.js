@@ -70,12 +70,14 @@ export default function RegisterProduct({ navigation }) {
   async function handleSubmit() {
     if (validateInputs(1)) {
       try {
-        const response = await api.post('/product/add', _product)
-        if(response.status == 200){
+        setTimeout(() => {
           ToastAndroid.show("Produto cadastrado", ToastAndroid.SHORT);
           navigation.navigate("Produtos")
-        }
+        }, 2000);
+        const response = await api.post('/product/add', _product)
+
       } catch (error) {
+        console.log(error)
         ToastAndroid.show("problema ao cadastrar produto", ToastAndroid.SHORT);
       }
     }
@@ -123,6 +125,7 @@ export default function RegisterProduct({ navigation }) {
           placeholder="Preço do produto"
           autoCapitalize="none"
           autoCorrect={false}
+          keyboardType='numeric'
           style={styles.input}
           maxLength={15}
         />
@@ -132,6 +135,7 @@ export default function RegisterProduct({ navigation }) {
           placeholder="Quantidade ATUAL"
           autoCapitalize="none"
           autoCorrect={false}
+          keyboardType='numeric'
           style={styles.input}
         />
         <Text style={styles.label}>Digite o estoque mínimo</Text>
@@ -140,6 +144,7 @@ export default function RegisterProduct({ navigation }) {
           placeholder="Estoque MÍNIMO"
           autoCapitalize="none"
           autoCorrect={false}
+          keyboardType='numeric'
           style={styles.input}
         />
       </View>

@@ -48,20 +48,16 @@ export default function Login({ navigation }) {
                 // console.log(account)
                 try {
                     const { data } = await api.post('/user/login', { email: account.email, password: account.password })
-                    const response = JSON.parse(JSON.stringify(data))
-                    if (response.rowsAffected > 0) {
-                        accessGranted(response[0])
+                    const { recordset } = JSON.parse(JSON.stringify(data))
+                    // console.log(recordset[0])
+                    if (data.rowsAffected > 0) {
+                        accessGranted(recordset[0])
                     } else {
                         ToastAndroid.show("Login ou senha invalidos", ToastAndroid.SHORT)
                     }
                 } catch (err) {
                     console.log(err)
-
                 }
-
-
-                // navigation.navigate('Produtos')//, account)
-                // registered_account.id.length != null ? checkCredencials(registered_account.password) : ToastAndroid.show("Login inválido", ToastAndroid.SHORT);;
             }
             getAccount();
         } else {
