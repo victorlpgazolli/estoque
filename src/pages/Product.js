@@ -1,18 +1,23 @@
 
-import React, { Component, useEffect, useState, useRef } from 'react';
-import { ScrollView, Dimensions, StyleSheet, Button, View, Text, TouchableOpacity, ToastAndroid } from 'react-native'
-import { Footer } from 'native-base';
-
-import { TextInput } from 'react-native-gesture-handler';
-const _height = Dimensions.get('window').height
-const _width = Dimensions.get('window').width
+import React, { useEffect, useState } from 'react';
+import { FlatList, Dimensions, StyleSheet, TextInput, View, Text, TouchableOpacity, ToastAndroid } from 'react-native'
+import api from '../services/api'
+const { width, height } = Dimensions.get('window');
 global.operation = false
 global.transaction = true;
 
+var newTransaction = {
+    quantidade: '20',
+    tipo: 'venda',
+    codigo: '1',
+    operador: 'Nilson'
+}
 export default function Product({ navigation }) {
     const [qnt, updateQnt] = useState('')
     const [product, setProduct] = useState([]);
+    const [pastTransactions, setPastTransactions] = useState([]);
     useEffect(() => {
+        setPastTransactions(pastTransactions.concat(newTransaction))
         try {
             if (product) {
                 var { produto } = navigation.state.params
@@ -23,15 +28,34 @@ export default function Product({ navigation }) {
                 global.operation = operation;
             } else {
             }
-        } catch{
-            navigation.navigate('Principal')
+        } catch (error) {
+            console.log(error)
         }
     }, [global.operation]);
     function handleConfirm() {
-        if (qnt < product.Quantidade_Atual) {
-            ToastAndroid.show('Imposível realizar operação', ToastAndroid.SHORT)
-            // toastRef.show('hello toast');
+        // if ( product.Quantidade_Atual - qnt < 0) {
+        // ToastAndroid.show('Imposível realizar operação', ToastAndroid.SHORT)
+        // toastRef.show('hello toast');
+        // } else {
+        if (qnt.length == 0) {
+            ToastAndroid.show('Defina uma quantidade primeiro', ToastAndroid.SHORT)
+        } else {
+            makeOperation();
         }
+        // }
+    }
+    async function makeOperation() {
+        try {
+
+            const response = await api.post('/product/operation', { qnt: qnt, id: product.Codigo, type: global.operation ? 'compra' : 'venda' })
+            if (response.status == 200) {
+                ToastAndroid.show(`Atualizado com sucesso`, ToastAndroid.SHORT);
+                navigation.navigate('Produtos')
+            }
+        } catch (error) {
+            console.log(error)
+        }
+
     }
     return (
 
@@ -69,7 +93,7 @@ export default function Product({ navigation }) {
                                 autoCorrect={false}
                                 style={styles.input}
                             />
-                            <Footer style={[{ backgroundColor: '#ffffff00', flexDirection: 'row' }]}>
+                            <View style={[{ backgroundColor: '#ffffff00', flexDirection: 'row' }]}>
                                 <View style={[{ marginRight: 'auto' }]}>
                                     <TouchableOpacity onPress={() => { global.operation = false; navigation.navigate('Produtos') }} style={[styles.submitBtn, styles.shadow]}>
                                         <Text style={[styles.submitBtnText, styles.colorBlack]}>Cancelar</Text>
@@ -80,9 +104,22 @@ export default function Product({ navigation }) {
                                         <Text style={[styles.submitBtnText, styles.colorBlack]}>Confirmar</Text>
                                     </TouchableOpacity>
                                 </View>
-                            </Footer>
+                            </View>
                         </View>
-                    </View> : null
+                    </View>
+                    :
+                    <View style={[]}>
+                        <FlatList
+                            data={pastTransactions}
+                            contentContainerStyle={[styles.shadow, styles.productItem,{alignItems: 'center'}]}
+                            keyExtractor={(item) => item.codigo}
+                            renderItem={({ item }) => (
+                                <View style={[{ paddingVertical: 3 }]}>
+                            <Text style={[{ color: "#000", fontSize: 18 }]}>{item.tipo} de {item.quantidade} pelo {item.operador}</Text>
+                                </View>
+                            )}>
+                        </FlatList>
+                    </View>
             }
 
 
@@ -152,7 +189,7 @@ const styles = StyleSheet.create({
         borderColor: '#00000000',
         backgroundColor: '#fff',
         borderWidth: 1,
-        width: _width / 2 - 11,
+        width: width / 2 - 11,
         height: 55,
         margin: 10,
         marginTop: 0,
@@ -191,6 +228,13 @@ const styles = StyleSheet.create({
     description: {
         height: 100
     },
-
+    productItem: {
+        borderBottomWidth: 0.5,
+        borderRadius: 10,
+        borderColor: 'rgba(0,0,0,0.3)',
+        marginVertical: 3,
+        marginHorizontal: 10,
+        backgroundColor: "#fff",
+    },
 
 })
