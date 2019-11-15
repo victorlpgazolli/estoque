@@ -3,12 +3,14 @@ import React from 'react';
 import { KeyboardAvoidingView, ScrollView, Platform, Dimensions, StyleSheet, Image, View, Text, TouchableOpacity, SafeAreaView, ToastAndroid } from 'react-native'
 import { createStackNavigator, createSwitchNavigator, createAppContainer, createBottomTabNavigator, createDrawerNavigator, DrawerActions, DrawerItems } from 'react-navigation';
 import Icon from 'react-native-vector-icons/FontAwesome';
+import Icon5 from 'react-native-vector-icons/FontAwesome5';
 import Login from './pages/Login'
 import Produtos from './pages/Main'
 import Cadastrar from './pages/Register'
 import CadastrarProduto from './pages/RegisterProduct'
 import CadastrarCategoria from './pages/RegisterCategory'
 import Configurações from './pages/Config'
+import BuyOrders from './pages/BuyOrders'
 import Product from './pages/Product'
 
 var isVisible = false;
@@ -66,10 +68,13 @@ const appNav = createStackNavigator({
       headerLeft: null,
       headerRight: (
         <View style={{ flexDirection: 'row' }}>
-          <TouchableOpacity style={{ paddingLeft: 20 }} onPress={() => { console.log(navigation.state.params);navigation.navigate('Configurações', { account: navigation.state.params }) }}>
+          <TouchableOpacity style={{ paddingLeft: 15 }} onPress={() => { console.log(navigation.state.params);navigation.navigate('ItensComprar', { account: navigation.state.params }) }}>
+            <Icon5 name='clipboard-list' size={24} />
+          </TouchableOpacity>
+          <TouchableOpacity style={{ paddingLeft: 15 }} onPress={() => { console.log(navigation.state.params);navigation.navigate('Configurações', { account: navigation.state.params }) }}>
             <Icon name='cogs' size={24} />
           </TouchableOpacity>
-          <TouchableOpacity style={{ paddingHorizontal: 20 }} onPress={() => { isVisible = !isVisible; navigation.setParams({ visible: isVisible }) }}>
+          <TouchableOpacity style={{ paddingHorizontal: 15 }} onPress={() => { isVisible = !isVisible; navigation.setParams({ visible: isVisible }) }}>
             <Icon name='search' size={24} />
           </TouchableOpacity>
         </View>
@@ -86,6 +91,12 @@ const appNav = createStackNavigator({
       tabBarIcon: ({ tintColor }) => (
         <Icon name='cogs' size={24} />
       ),
+    }),
+  },
+  ItensComprar: {
+    screen: BuyOrders,
+    navigationOptions: ({ navigation }) => ({
+      title: 'Ordens de Compra',
     }),
   },
   /* tabNav: {

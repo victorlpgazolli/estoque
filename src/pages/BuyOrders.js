@@ -9,7 +9,7 @@ global.newPass = ''
 global.popup_actions = false;
 global.popup_register = false;
 const { width, height } = Dimensions.get('window');
-export default function Main({ navigation }) {
+export default function BuyOrders({ navigation }) {
     const [, updateState] = React.useState();
     const forceUpdate = useCallback(() => updateState({}), []);
     const [conta, updateConta] = useState([]);
@@ -80,7 +80,7 @@ export default function Main({ navigation }) {
                 onBackdropPress={() => { hidePopup() }}>
                 <View style={{ top: 0, position: 'absolute', right: 0, left: 0 }}>
                     <View style={[styles.operation]}>
-                        <View style={[styles.card, styles.shadow, { height: 150 }]}>
+                        <View style={[styles.card, styles.shadow, { height: 100 }]}>
                             {/* <TextInput
                               onChangeText={val => qnt_atual = val}
                               placeholder={global.transaction ? 'Adicionar' : 'Remover'}
@@ -90,11 +90,8 @@ export default function Main({ navigation }) {
                             /> */}
                             <Text style={[styles.colorBlack]}>Operação que deseja fazer:</Text>
                             <View style={[styles.actions]}>
-                                <TouchableOpacity onPress={() => { deleteAccount(); hidePopup(); }} style={[styles.indivAction, styles.floatLeft,]}>
-                                    <Text style={[styles.colorBlack]}>Apagar conta</Text>
-                                </TouchableOpacity>
                                 <TouchableOpacity onPress={() => { logout(); hidePopup(); }} style={[styles.indivAction, styles.floatLeft,]}>
-                                    <Text style={[styles.colorBlack]}>Fazer Logout</Text>
+                                    <Text style={[styles.colorBlack]}>Dar baixa no pedido</Text>
                                 </TouchableOpacity>
                             </View>
                         </View>
@@ -322,52 +319,3 @@ const styles = StyleSheet.create({
         alignSelf: 'center',
     }
 })
- /* <TouchableOpacity onPress={handleSubmit} style={[styles.submitBtn,styles.backRed]}>
-             <Text style={styles.submitBtnText}>Apagar conta</Text>
-         </TouchableOpacity> */
-
-                        // <View style={styles.form}>
-
-
-                        // <Text style={styles.label}>Nome de usuario</Text>
-                        // <TextInput
-                        //     onChangeText={val => account.nm_usuario = val}
-                        //     placeholder="NOME"
-                        //     autoCapitalize="none"
-                        //     autoCorrect={false}
-                        //     value={account.nm_usuario}
-                        //     style={styles.input}
-                        //     maxLength={40}
-                        // />
-                        // <Text style={styles.label}>E-mail </Text>
-                        // <TextInput
-                        //     onChangeText={val => account.nm_email = val}
-                        //     placeholder="E-MAIL"
-                        //     autoCapitalize="none"
-                        //     autoCorrect={false}
-                        //     value={account.nm_email}
-                        //     style={styles.input}
-                        //     maxLength={40}
-                        // />
-                        // <Text style={styles.label}>Senha</Text>
-                        // <TextInput
-                        //     onChangeText={val => account.cd_senha = val}
-                        //     placeholder="SENHA"
-                        //     autoCapitalize="none"
-                        //     autoCorrect={false}
-                        //     style={styles.input}
-                        //     value={account.cd_senha}
-                        //     secureTextEntry={true}
-                        //     maxLength={40}
-                        // />
-                        // <Text style={styles.label}>Digite novamente a senha</Text>
-                        // <TextInput
-                        //     onChangeText={val => global.newPass = val}
-                        //     placeholder="SENHA"
-                        //     autoCapitalize="none"
-                        //     value={account.cd_senha}
-                        //     autoCorrect={false}
-                        //     style={styles.input}
-                        //     maxLength={40}
-                        // />
-                        // </View>
