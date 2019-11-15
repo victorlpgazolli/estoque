@@ -151,7 +151,7 @@ export default function Main({ navigation }) {
           {filteredProducts.map(product => {
             return (
               product.status ?
-                <TouchableOpacity onPress={() => navigation.navigate('Product', { produto: product, action: null })} key={product.Codigo} style={styles.productItem}>
+                <TouchableOpacity onPress={() => navigation.navigate('Product', { produto: product, action: null, account: navigation.state.params })} key={product.Codigo} style={styles.productItem}>
                   <View style={styles.productInfo}>
                     <Text style={[styles.productName, styles.productInfoItem]}>{product.Produto}</Text>
                     <Text style={[styles.productName, styles.productInfoItem, { position: 'absolute', bottom: 10, left: 10, opacity: 0.6 }]}>{product.Categoria}</Text>
@@ -194,10 +194,10 @@ export default function Main({ navigation }) {
                             /> */}
                   <Text style={[styles.colorBlack]}>Operação que deseja fazer:</Text>
                   <View style={[styles.actions]}>
-                    <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: true, operation: true }); hidePopup(1); }} style={[styles.indivAction, styles.floatRight]}>
+                    <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: true, operation: true, account: navigation.state.params }); hidePopup(1); }} style={[styles.indivAction, styles.floatRight]}>
                       <Text style={[styles.colorBlack]}>Adicionar quantidade de produtos</Text>
                     </TouchableOpacity>
-                    <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: true, operation: false }); hidePopup(1); }} style={[styles.indivAction, styles.floatLeft,]}>
+                    <TouchableOpacity onPress={() => { navigation.navigate('Product', { produto: global.tempProd, action: true, operation: false, account: navigation.state.params }); hidePopup(1); }} style={[styles.indivAction, styles.floatLeft,]}>
                       <Text style={[styles.colorBlack]}>Remover quantidade de produtos</Text>
                     </TouchableOpacity>
                     <TouchableOpacity onPress={() => { deleteProd(global.tempProd.Codigo) }} style={[styles.indivAction, styles.floatLeft,]}>

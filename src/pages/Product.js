@@ -1,37 +1,45 @@
 
 import React, { useEffect, useState } from 'react';
 import { FlatList, Dimensions, StyleSheet, TextInput, View, Text, TouchableOpacity, ToastAndroid } from 'react-native'
+import AsyncStorage from '@react-native-community/async-storage'
 import api from '../services/api'
 const { width, height } = Dimensions.get('window');
 global.operation = false
-global.transaction = true;
-
-var newTransaction = {
-    quantidade: '20',
-    tipo: 'venda',
-    codigo: '1',
-    operador: 'Nilson'
-}
+global.transaction = false;
+global.pastTransactions = [];
 export default function Product({ navigation }) {
     const [qnt, updateQnt] = useState('')
+    const [isNew, updateisNew] = useState(false);
     const [product, setProduct] = useState([]);
     const [pastTransactions, setPastTransactions] = useState([]);
     useEffect(() => {
-        setPastTransactions(pastTransactions.concat(newTransaction))
-        try {
-            if (product) {
-                var { produto } = navigation.state.params
-                setProduct(produto)
-                var { action } = navigation.state.params
-                var { operation } = navigation.state.params
-                global.transaction = action;
-                global.operation = operation;
-            } else {
+        // setPastTransactions(pastTransactions.concat(newTransaction))
+        const { account, produto, action, operation } = navigation.state.params
+        setProduct(produto)
+        global.transaction = action;
+        global.account = account;
+        global.operation = operation;
+        setTimeout(async () => {
+            try {
+                if (product) {
+                    if (product.Codigo != undefined) {
+                        const { data } = await api.post('/product/operation/list', { id: product.Codigo });
+                        global.pastTransactions = data.recordset;
+                        setPastTransactions(global.pastTransactions)
+                        console.log(pastTransactions)
+                    }
+                } else {
+                }
+            } catch (error) {
+                console.log(error)
             }
-        } catch (error) {
-            console.log(error)
-        }
-    }, [global.operation]);
+        }, 500)
+    }, [product]);
+
+    // if (global.pastTransactions.length == 0) {
+    //     setTimeout(() => {
+    //     }, 700)
+    // }
     function handleConfirm() {
         // if ( product.Quantidade_Atual - qnt < 0) {
         // ToastAndroid.show('Imposível realizar operação', ToastAndroid.SHORT)
@@ -46,11 +54,32 @@ export default function Product({ navigation }) {
     }
     async function makeOperation() {
         try {
+            if (global.account.id == undefined) {
+                AsyncStorage.getItem('@account_id').then(stored_id => {
+                    try {
+                        if (stored_id.length > 0) {
+                            async function getAccount() {
+                                const { data } = await api.get('/user/' + stored_id)
+                                const { recordset: results } = data
+                                global.account = {
+                                    name: results[0].nm_usuario,
+                                    email: results[0].nm_email,
+                                    password: results[0].cd_senha,
+                                    id: results[0].cd_usuario,
+                                }
+                                const response = await api.post('/product/operation', { qnt: qnt, id: product.Codigo, type: global.operation ? 'compra' : 'venda', userId: global.account.id })
+                                if (response.status == 200) {
+                                    ToastAndroid.show(`Atualizado com sucesso`, ToastAndroid.SHORT);
+                                    navigation.navigate('Produtos')
+                                }
+                            }
+                            getAccount()
+                        }
+                    } catch{
 
-            const response = await api.post('/product/operation', { qnt: qnt, id: product.Codigo, type: global.operation ? 'compra' : 'venda' })
-            if (response.status == 200) {
-                ToastAndroid.show(`Atualizado com sucesso`, ToastAndroid.SHORT);
-                navigation.navigate('Produtos')
+                    }
+
+                })
             }
         } catch (error) {
             console.log(error)
@@ -109,13 +138,14 @@ export default function Product({ navigation }) {
                     </View>
                     :
                     <View style={[]}>
+                        <Text style={[{ color: "#000", fontSize: 18, alignItems: 'center' }]}>Histórico de transferências</Text>
                         <FlatList
-                            data={pastTransactions}
-                            contentContainerStyle={[styles.shadow, styles.productItem,{alignItems: 'center'}]}
+                            data={global.pastTransactions}
+                            contentContainerStyle={[styles.shadow, styles.productItem, { alignItems: 'center' }]}
                             keyExtractor={(item) => item.codigo}
                             renderItem={({ item }) => (
                                 <View style={[{ paddingVertical: 3 }]}>
-                            <Text style={[{ color: "#000", fontSize: 18 }]}>{item.tipo} de {item.quantidade} pelo {item.operador}</Text>
+                                    <Text style={[{ color: "#000", fontSize: 18 }]}>{item.tipo} de {item.quantidade} Un. pelo {item.usuario}</Text>
                                 </View>
                             )}>
                         </FlatList>

@@ -55,7 +55,6 @@ export default function Main({ navigation }) {
             ToastAndroid.show("Deletando a conta...", ToastAndroid.SHORT);
             let _email = conta.nm_email || conta.email;
             const response = await api.post('/user/delete', {email: _email})
-            console.log(response.data)
             await AsyncStorage.setItem('@account_id', '');
             navigation.navigate('Login')
         } catch (error) {
@@ -99,7 +98,7 @@ export default function Main({ navigation }) {
                 onBackdropPress={() => { hidePopup() }}>
                 <View style={{ top: 0, position: 'absolute', right: 0, left: 0 }}>
                     <View style={[styles.operation]}>
-                        <View style={[styles.card, styles.shadow, { height: 180 }]}>
+                        <View style={[styles.card, styles.shadow, { height: 150 }]}>
                             {/* <TextInput
                               onChangeText={val => qnt_atual = val}
                               placeholder={global.transaction ? 'Adicionar' : 'Remover'}
@@ -109,9 +108,6 @@ export default function Main({ navigation }) {
                             /> */}
                             <Text style={[styles.colorBlack]}>Operação que deseja fazer:</Text>
                             <View style={[styles.actions]}>
-                                <TouchableOpacity onPress={() => { navigation.navigate("CadastrarProduto", global.categories); hidePopup(); }} style={[styles.indivAction, styles.floatRight]}>
-                                    <Text style={[styles.colorBlack]}>Editar conta</Text>
-                                </TouchableOpacity>
                                 <TouchableOpacity onPress={() => { deleteAccount(); hidePopup(); }} style={[styles.indivAction, styles.floatLeft,]}>
                                     <Text style={[styles.colorBlack]}>Apagar conta</Text>
                                 </TouchableOpacity>
