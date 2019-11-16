@@ -210,11 +210,12 @@ export default function Main({ navigation }) {
           </Modal>
 
           <Modal backdropColor={'#00000060'} isVisible={global.popup_register}
+            backdropOpacity={1}
             animationIn="slideInDown"
             animationOut="slideOutDown"
             animationInTiming={600}
             animationOutTiming={600}
-            onBackdropPress={() => { hidePopup(2) }}>
+            onBackdropPress={() => { hidePopup(2); }}>
             <View style={{ flex: 1 }}>
               <View style={[styles.operation]}>
                 <View style={[styles.card, styles.shadow, { height: 150 }]}>

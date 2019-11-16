@@ -22,11 +22,10 @@ export default function Product({ navigation }) {
         setTimeout(async () => {
             try {
                 if (product) {
-                    if (product.Codigo != undefined) {
+                    if (product.Codigo != undefined && global.transaction == null) {
                         const { data } = await api.post('/product/operation/list', { id: product.Codigo });
                         global.pastTransactions = data.recordset;
                         setPastTransactions(global.pastTransactions)
-                        console.log(pastTransactions)
                     }
                 } else {
                 }
@@ -52,34 +51,15 @@ export default function Product({ navigation }) {
         }
         // }
     }
+
     async function makeOperation() {
         try {
-            if (global.account.id == undefined) {
-                AsyncStorage.getItem('@account_id').then(stored_id => {
-                    try {
-                        if (stored_id.length > 0) {
-                            async function getAccount() {
-                                const { data } = await api.get('/user/' + stored_id)
-                                const { recordset: results } = data
-                                global.account = {
-                                    name: results[0].nm_usuario,
-                                    email: results[0].nm_email,
-                                    password: results[0].cd_senha,
-                                    id: results[0].cd_usuario,
-                                }
-                                const response = await api.post('/product/operation', { qnt: qnt, id: product.Codigo, type: global.operation ? 'compra' : 'venda', userId: global.account.id })
-                                if (response.status == 200) {
-                                    ToastAndroid.show(`Atualizado com sucesso`, ToastAndroid.SHORT);
-                                    navigation.navigate('Produtos')
-                                }
-                            }
-                            getAccount()
-                        }
-                    } catch{
-
-                    }
-
-                })
+            console.info({ qnt: qnt, id: product.Codigo, type: global.operation ? 'compra' : 'venda', userId: global.account.id })
+            const response = await api.post('/product/operation', { qnt: qnt, id: product.Codigo, type: global.operation ? 'compra' : 'venda', userId: global.account.id })
+            if (response.status == 200) {
+                ToastAndroid.show(`Atualizado com sucesso`, ToastAndroid.SHORT);
+                navigation.navigate('Produtos')
+            } else {
             }
         } catch (error) {
             console.log(error)
@@ -137,7 +117,7 @@ export default function Product({ navigation }) {
                         </View>
                     </View>
                     :
-                    <View style={[]}>
+                    <View style={[{ height: height * 0.6 }]}>
                         <Text style={[{ color: "#000", fontSize: 18, alignItems: 'center' }]}>Histórico de transferências</Text>
                         <FlatList
                             data={global.pastTransactions}
@@ -168,7 +148,6 @@ export default function Product({ navigation }) {
 const styles = StyleSheet.create({
     container: {
         backgroundColor: '#fff',
-        flex: 1,
     },
     images: {
         height: 120,

@@ -25,18 +25,18 @@ export default function RegisterCategory({ navigation }) {
     async function handleSubmit() {
         if (validateInputs()) {
             if (categoryNotExists()) {
-                console.log(_category.name)
                 try {
                     const response = await api.post('/category/add', _category)
-                        .then(item => { navigation.navigate("Principal") })
-                        .catch(err => console.error(err))
+                    if (response.status == 200) {
+                        ToastAndroid.show("Categoria criada com sucesso!", ToastAndroid.SHORT);
+                        navigation.navigate("Produtos")
+                    }
                 } catch (error) {
+                    console.error(error)
                     ToastAndroid.show("problema ao cadastrar categoria", ToastAndroid.SHORT);
                 }
-
-                navigation.navigate("Principal")
             } else {
-                console.log(_category.name)
+                console.log('categoria já existe')
                 ToastAndroid.show("Categoria já existe", ToastAndroid.SHORT);
             }
         } else {
@@ -45,7 +45,6 @@ export default function RegisterCategory({ navigation }) {
     }
     function categoryNotExists() {
         for (var category in categories) {
-            console.log(category)
             if (category.nm_categoria != _category.name) {
                 continue
             } else {

@@ -1,56 +1,60 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
-import { SafeAreaView, KeyboardAvoidingView, ScrollView, Dimensions, TextInput, StyleSheet, Image, View, Text, TouchableOpacity, ToastAndroid } from 'react-native'
+import { SafeAreaView, FlatList, ScrollView, Dimensions, TextInput, StyleSheet, Image, View, Text, TouchableOpacity, ToastAndroid } from 'react-native'
 import Icon from 'react-native-vector-icons/FontAwesome';
 import api from '../services/api'
 import AsyncStorage from '@react-native-community/async-storage'
 import Modal from "react-native-modal";
-global.newPass = ''
+let refreshScreen = false;
 global.popup_actions = false;
 global.popup_register = false;
+global.buyOrdersList = [];
 const { width, height } = Dimensions.get('window');
 export default function BuyOrders({ navigation }) {
-    const [, updateState] = React.useState();
-    const forceUpdate = useCallback(() => updateState({}), []);
-    const [conta, updateConta] = useState([]);
+    const [isNew, updateisNew] = useState(false);
+    const [load, setLoad] = useState({ refreshing: false });
     useEffect(() => {
         try {
-            updateConta(navigation.state.params.account)
+            getBuyOrders()
             // const { account: conta } = navigation.state.params
-
-
-
         } catch (err) {
 
         }
-    }, [conta]);
+    }, []);
 
-    var showPopup = function (popup, _account) {
-        // global.tempProd = _account;
+    async function getBuyOrders() {
+        const { data } = await api.get('/product/buyOrder/list')
+        global.buyOrdersList = data.recordset;
+        setTimeout(() => {
+            refresh = true;
+            setLoad({ refreshing: false })
+            updateisNew(!isNew)
+        }, 1000);
+    }
+    var showPopup = function (popup, _buyOrder) {
+        global.temp_buyOrder = _buyOrder;
         global.popup_register = true;
-        forceUpdate()
+        updateisNew(!isNew);
+    }
+
+    function handleRefresh() {
+        //simulate refresh
+        getBuyOrders()
+        setLoad({ refreshing: true })
     }
     var hidePopup = function (popup) {
         // global.tempProd = {};
         global.popup_register = false;
-        forceUpdate()
+        updateisNew(!isNew);
     }
-    var deleteAccount = async function () {
+    var changeBuyOrderStatus = async function () {
         try {
-            ToastAndroid.show("Deletando a conta...", ToastAndroid.SHORT);
-            let _email = conta.nm_email || conta.email;
-            const response = await api.post('/user/delete', { email: _email })
-            await AsyncStorage.setItem('@account_id', '');
-            navigation.navigate('Login')
-        } catch (error) {
-            console.log(error)
-        }
-    }
-    var logout = async function () {
-        try {
-            ToastAndroid.show("Saindo da conta...", ToastAndroid.SHORT);
-            await AsyncStorage.setItem('@account_id', '');
-            navigation.navigate('Login')
+            const response = await api.post('/product/buyOrder/delete', { id: global.temp_buyOrder.codigo })
+            if (response.status == 200) {
+                handleRefresh()
+            } else {
+                console.log(response)
+            }
         } catch (error) {
             console.log(error)
         }
@@ -58,18 +62,27 @@ export default function BuyOrders({ navigation }) {
     return (
 
         <View style={styles.body}>
-            <View style={[{ backgroundColor: '#fff', flexDirection: 'row', height: 60, marginVertical: 10, marginHorizontal: 20, borderRadius: 10, borderWidth: 1, borderColor: '#00000090' }]}>
-                <View style={[{ justifyContent: 'center', flex: 1, }]}>
-                    <Text style={[{ textAlign: 'center', fontSize: 18 }]}>{conta.name || conta.nm_usuario}</Text>
-                    <Text style={[{ textAlign: 'center', fontSize: 15 }]}>{conta.email || conta.nm_email}</Text>
-                </View>
-                <View style={[{ justifyContent: 'center', }]}>
-                    <TouchableOpacity style={{ height: 50, width: 50, alignItems: 'flex-end', justifyContent: "center", marginRight: 40 }} onPress={() => { showPopup(1, conta) }}>
-                        <Icon name='ellipsis-v' size={24} />
-                    </TouchableOpacity>
 
-                </View>
-            </View>
+            <FlatList
+                data={global.buyOrdersList}
+                refreshing={load.refreshing}
+                onRefresh={() => { handleRefresh() }}
+                keyExtractor={(item) => item.codigo}
+                renderItem={({ item }) => (
+                    item.status ?
+                        <View style={[{ backgroundColor: '#fff', flexDirection: 'row', height: 60, marginVertical: 10, marginHorizontal: 20, borderRadius: 10, borderWidth: 1, borderColor: '#00000090' }]}>
+                            <View style={[{ justifyContent: 'center', flex: 1, flexDirection: 'row', alignItems: 'center' }]}>
+                                <Text style={[{ textAlign: 'center', fontSize: 16 }]}>Comprar {item.quantidade} Un. do </Text>
+                                <Text style={[{ textAlign: 'center', fontSize: 16 }]}>{item.produto}</Text>
+                            </View>
+                            <View style={[{ justifyContent: 'center', }]}>
+                                <TouchableOpacity style={{ height: 50, width: 50, alignItems: 'flex-end', justifyContent: "center", marginRight: 40 }} onPress={() => { showPopup(1, item) }}>
+                                    <Icon name='ellipsis-v' size={24} />
+                                </TouchableOpacity>
+
+                            </View>
+                        </View> : null
+                )}></FlatList>
 
 
             <Modal backdropColor={'#00000060'} isVisible={global.popup_register}
@@ -90,7 +103,7 @@ export default function BuyOrders({ navigation }) {
                             /> */}
                             <Text style={[styles.colorBlack]}>Operação que deseja fazer:</Text>
                             <View style={[styles.actions]}>
-                                <TouchableOpacity onPress={() => { logout(); hidePopup(); }} style={[styles.indivAction, styles.floatLeft,]}>
+                                <TouchableOpacity onPress={() => { changeBuyOrderStatus(global.temp_buyOrder); hidePopup(); }} style={[styles.indivAction, styles.floatLeft,]}>
                                     <Text style={[styles.colorBlack]}>Dar baixa no pedido</Text>
                                 </TouchableOpacity>
                             </View>
